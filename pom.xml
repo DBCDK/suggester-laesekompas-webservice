@@ -1,0 +1,103 @@
+<!--
+  ~ Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+  ~ See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+  -->
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Basic information about this module -->
+  <groupId>dk.dbc</groupId>
+  <artifactId>microservice-sample</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <repositories>
+    <repository>
+      <id>mavenrepo.dbc.dk</id>
+      <url>http://mavenrepo.dbc.dk/nexus/content/groups/public</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>mavenrepo.dbc.dk</id>
+      <url>http://mavenrepo.dbc.dk/nexus/content/groups/public</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <properties>
+    <jdk.target.version>1.8</jdk.target.version>
+    <slf4j.version>1.7.25</slf4j.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>8.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.microprofile</groupId>
+        <artifactId>microprofile</artifactId>
+        <type>pom</type>
+        <version>1.4</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+        <version>5.1.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-ext</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <modules>
+    <module>canonical</module>
+  </modules>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.7.0</version>
+          <configuration>
+            <source>${jdk.target.version}</source>
+            <target>${jdk.target.version}</target>
+            <testSource>${jdk.target.version}</testSource>
+            <testTarget>${jdk.target.version}</testTarget>
+            <showDeprecation>true</showDeprecation>
+            <showWarnings>true</showWarnings>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>3.1.0</version>
+          <configuration>
+            <webResources>
+              <resource>
+                <directory>${basedir}/src/main/webapp/WEB-INF</directory>
+                <filtering>true</filtering>
+                <targetPath>WEB-INF</targetPath>
+              </resource>
+            </webResources>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
