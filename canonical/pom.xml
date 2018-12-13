@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
-  ~ See license text in LICENSE.txt
+  ~ See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -10,8 +10,9 @@
 
   <parent>
     <groupId>dk.dbc</groupId>
-    <artifactId>microservice-sample</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>microservice-pom</artifactId>
+    <version>latest-SNAPSHOT</version>
+    <relativePath></relativePath>
   </parent>
 
   <artifactId>microservice-sample-canonical</artifactId>
