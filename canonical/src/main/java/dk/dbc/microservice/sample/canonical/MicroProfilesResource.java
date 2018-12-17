@@ -36,10 +36,12 @@ public class MicroProfilesResource {
     private EntityManager entityManager;
 
     /* Inject value of mandatory property MANDATORY_CONFIG_VALUE
-       otherwise a DeploymentException will be thrown. */
+       otherwise a DeploymentException will be thrown.
+       If unable to interpret the value as an Integer a
+       DeploymentException will be thrown. */
     @Inject
     @ConfigProperty(name = "MANDATORY_CONFIG_VALUE")
-    private String mandatoryConfigValue;
+    private Integer mandatoryConfigValue;
 
     /* Inject optional value of OPTIONAL_CONFIG_VALUE property.
        This will not lead to a DeploymentException if the configured value
