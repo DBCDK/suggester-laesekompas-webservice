@@ -52,9 +52,10 @@ public class DatabaseMigrator {
            to specify the locations to scan recursively for migrations.
          */
 
-        final Flyway flyway = new Flyway();
-        flyway.setTable("schema_version");
-        flyway.setDataSource(dataSource);
+        final Flyway flyway = Flyway.configure()
+                .table("schema_version")
+                .dataSource(dataSource)
+                .load();
         for (MigrationInfo info : flyway.info().all()) {
             LOGGER.info("database migration {} : {} from file '{}'",
                     info.getVersion(), info.getDescription(), info.getScript());
