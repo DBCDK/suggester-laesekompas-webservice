@@ -15,7 +15,7 @@
     <relativePath></relativePath>
   </parent>
 
-  <artifactId>microservice-sample-canonical</artifactId>
+  <artifactId>suggester-laesekompas-webservice</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>war</packaging>
 

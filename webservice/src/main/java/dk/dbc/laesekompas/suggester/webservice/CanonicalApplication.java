@@ -3,7 +3,7 @@
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
 
-package dk.dbc.microservice.sample.canonical;
+package dk.dbc.laesekompas.suggester.webservice;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -21,7 +21,7 @@ import java.util.Set;
 public class CanonicalApplication extends Application {
     private static final Set<Class<?>> classes = new HashSet<>();
     static {
-        classes.add(MicroProfilesResource.class);
+        classes.add(SuggestResource.class);
     }
 
     @Override

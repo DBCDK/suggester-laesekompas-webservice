@@ -1,3 +1,0 @@
-FROM docker.dbc.dk/payara5-micro:latest
-
-ADD target/*.war target/docker/reference-app.json deployments/

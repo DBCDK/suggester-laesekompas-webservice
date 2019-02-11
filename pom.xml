@@ -12,6 +12,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>canonical</module>
+    <module>webservice</module>
   </modules>
 </project>

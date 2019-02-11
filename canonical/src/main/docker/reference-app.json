@@ -1,8 +1,0 @@
-{
-    "appName": "reference-app",
-    "jdbc": {
-        "jdbc/sample_db": {
-            "url": "${SAMPLE_DB}"
-        }
-    }
-}
