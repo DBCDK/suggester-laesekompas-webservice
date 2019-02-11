@@ -1,5 +1,3 @@
-FROM docker.dbc.dk/payara5-micro:next
+FROM docker.dbc.dk/payara5-micro:latest
 
-ADD reference-app.json *.war wars/
-
-
+ADD target/*.war target/docker/reference-app.json deployments/
