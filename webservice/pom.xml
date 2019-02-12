@@ -61,6 +61,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
       </plugin>
+      <!-- Copying docker resources to target is assumed by Dockerfile and Jenkins build -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.1.0</version>
