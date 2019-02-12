@@ -1,3 +1,6 @@
+// TODO change repository URL to proper scrum team URL
+def dockerRepository = 'https://docker-os.dbc.dk'
+
 pipeline {
     agent { label "devel8" }
     tools {
@@ -44,13 +47,14 @@ pipeline {
                     def version = readMavenPom().version
 
                     for (def f : dockerFiles) {
-                        def dirName = f.path.take(f.path.length() - 11)
+                        def dirName = f.path.take(f.path.length() - 27)
+                        echo "We are looking to run in: $dirName"
 
                         dir(dirName) {
-                            modulePom = readMavenPom file: '../../../pom.xml'
+                            modulePom = readMavenPom file: 'pom.xml'
                             def projectArtifactId = modulePom.getArtifactId()
                             if( !projectArtifactId ) {
-                                throw new hudson.AbortException("Unable to find module ArtifactId in ${dirName}/../../../pom.xml remember to add a <ArtifactId> element")
+                                throw new hudson.AbortException("Unable to find module ArtifactId in ${dirName}/pom.xml remember to add a <ArtifactId> element")
                             }
 
                             def imageName = "${projectArtifactId}-${version}".toLowerCase()
@@ -69,11 +73,10 @@ pipeline {
                             }
 
                             println("In ${dirName} build ${projectArtifactId} as ${imageName}:$imageLabel")
-                            sh 'rm -f *.war ; cp ../../../target/*.war . || true ; if [ -e prepare.sh ] ; then chmod +x prepare.sh ; ./prepare.sh ; fi'
-                            def app = docker.build("$imageName:${imageLabel}".toLowerCase(), '--pull --no-cache .')
+                            def app = docker.build("$imageName:${imageLabel}".toLowerCase(), '--pull --no-cache -f target/docker/Dockerfile .')
 
                             if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                                docker.withRegistry('https://docker-os.dbc.dk', 'docker') {
+                                docker.withRegistry(dockerRepository, 'docker') {
                                     app.push()
                                     if (env.BRANCH_NAME ==~ /master|trunk/) {
                                         println("app.push \"latest\"")
