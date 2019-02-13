@@ -18,7 +18,7 @@ import java.util.Set;
  * </p>
  */
 @ApplicationPath("/")
-public class CanonicalApplication extends Application {
+public class WebserviceApplication extends Application {
     private static final Set<Class<?>> classes = new HashSet<>();
     static {
         classes.add(SuggestResource.class);
