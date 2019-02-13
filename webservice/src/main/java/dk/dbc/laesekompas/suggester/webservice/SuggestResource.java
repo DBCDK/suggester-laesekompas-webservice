@@ -49,15 +49,13 @@ public class SuggestResource {
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
+    private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
 
-        SuggestQueryResponse response = solr.suggestQuery(query, SuggestType.ALL);
+        SuggestQueryResponse response = solr.suggestQuery(query, suggestType);
         LOGGER.info(response.getInfix().toString());
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
@@ -91,5 +89,25 @@ public class SuggestResource {
         duplicateRemover.forEach((k,s) -> suggestions.add(s));
 
         return Response.ok().entity(suggestions.subList(0, maxNumberSuggestions)).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
+        return suggest(SuggestType.ALL, query);
+    }
+
+    @GET
+    @Path("/e_book")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response suggestEBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
+        return suggest(SuggestType.E_BOOK, query);
+    }
+
+    @GET
+    @Path("/audio_book")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response suggestAudioBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
+        return suggest(SuggestType.AUDIO_BOOK, query);
     }
 }
