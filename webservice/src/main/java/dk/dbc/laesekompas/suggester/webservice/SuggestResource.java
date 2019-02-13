@@ -3,6 +3,10 @@ package dk.dbc.laesekompas.suggester.webservice;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestQueryResponse;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -18,6 +22,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 @Stateless
 @Path("suggest")
@@ -52,7 +59,37 @@ public class SuggestResource {
 
         SuggestQueryResponse response = solr.suggestQuery(query, SuggestType.ALL);
         LOGGER.info(response.getInfix().toString());
+        // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
+        // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
+        // operations order when iterated through, so first inserted is first iterated.
+        LinkedHashMap<String, SuggestionEntity> duplicateRemover = new LinkedHashMap<>();
+        List<SuggestionEntity> infix = response.getInfix();
+        List<SuggestionEntity> infixBlended = response.getInfixBlended();
+        List<SuggestionEntity> fuzzy = response.getFuzzy();
+        infix.addAll(infixBlended);
+        infix.addAll(fuzzy);
+        for(SuggestionEntity suggestion : infix) {
+            int index = infix.indexOf(suggestion);
+            LOGGER.info("Index: {} element: {}", index, suggestion);
+            switch (suggestion.getType()) {
+                case "TAG":
+                    TagSuggestionEntity tag = (TagSuggestionEntity) suggestion;
+                    duplicateRemover.putIfAbsent("tag_id:"+tag.getId(), suggestion);
+                    break;
+                case "AUTHOR":
+                    AuthorSuggestionEntity author = (AuthorSuggestionEntity) suggestion;
+                    duplicateRemover.putIfAbsent("author_name:"+author.getAuthorName(), author);
+                    break;
+                case "TITLE":
+                    TitleSuggestionEntity title = (TitleSuggestionEntity) suggestion;
+                    duplicateRemover.putIfAbsent("workid:"+title.getWorkid(),title);
+                    break;
+            }
+        }
+        // Convert to list, keeping order
+        List<SuggestionEntity> suggestions = new ArrayList<>();
+        duplicateRemover.forEach((k,s) -> suggestions.add(s));
 
-        return Response.ok().entity(response.getInfix()).build();
+        return Response.ok().entity(suggestions.subList(0, maxNumberSuggestions)).build();
     }
 }

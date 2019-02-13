@@ -1,6 +1,6 @@
 package dk.dbc.laesekompas.suggester.webservice.solr_entity;
 
-public class SuggestionEntity {
+public abstract class SuggestionEntity {
     private String matchedTerm;
     private String type;
 
@@ -23,5 +23,10 @@ public class SuggestionEntity {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "{matchedTerm=\""+matchedTerm+"\""+", type="+type+"}";
     }
 }
