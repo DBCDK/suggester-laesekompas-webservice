@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Suggester læsekompas documentation</title>
+</head>
+<body>
+    <h1>Suggester læsekompas documentation</h1>
+    <p>This service provides suggestions for content in læsekompasset/MinNæsteBog, through the following API:</p>
+    <h2>Suggester part</h2>
+    <var>/suggest{/e_book|audio_book}?query={q}</var>
+    <p>
+        <kbd>{/e_book|audio_book}</kbd> is optional, and specifies whether you filter suggestions to either EBooks or
+        Audio Books. If not specified, all types of books are suggested.
+    </p>
+    <p>
+        The query which suggestions are based on, is specified with <kbd>?query</kbd> parameter.
+    </p>
+    <h2>Searcher part</h2>
+    <var>/search?query={q}</var>
+    <p>
+        The query which suggestions are based on, is specified with <kbd>?query</kbd> parameter.
+    </p>
+    <a href="https://github.com/DBCDK/suggester-laesekompas-webservice">Source code</a>
+</body>
+</html>

@@ -22,6 +22,7 @@ public class WebserviceApplication extends Application {
     private static final Set<Class<?>> classes = new HashSet<>();
     static {
         classes.add(SuggestResource.class);
+        classes.add(SearchResource.class);
     }
 
     @Override
