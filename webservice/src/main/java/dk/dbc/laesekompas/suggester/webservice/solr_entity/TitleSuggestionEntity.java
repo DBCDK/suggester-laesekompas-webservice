@@ -45,4 +45,21 @@ public class TitleSuggestionEntity extends SuggestionEntity {
     public void setPid(String pid) {
         this.pid = pid;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TitleSuggestionEntity that = (TitleSuggestionEntity) o;
+        return (this.matchedTerm.equals(that.matchedTerm)) &&
+                (this.type.equals(that.type)) &&
+                (this.title.equals(that.title)) &&
+                (this.authorName.equals(that.authorName)) &&
+                (this.pid.equals(that.pid)) &&
+                (this.workid.equals(that.workid));
+    }
 }

@@ -25,4 +25,19 @@ public class TagSuggestionEntity extends SuggestionEntity {
     public void setTag(String tag) {
         this.tag = tag;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TagSuggestionEntity that = (TagSuggestionEntity) o;
+        return (this.matchedTerm.equals(that.matchedTerm)) &&
+                (this.type.equals(that.type)) &&
+                (this.tag.equals(that.tag)) &&
+                (this.id.equals(that.id));
+    }
 }
