@@ -1,8 +1,8 @@
 package dk.dbc.laesekompas.suggester.webservice.solr_entity;
 
 public abstract class SuggestionEntity {
-    private String matchedTerm;
-    private String type;
+    protected String matchedTerm;
+    protected String type;
 
     public SuggestionEntity(String matchedTerm, String type) {
         this.matchedTerm = matchedTerm;

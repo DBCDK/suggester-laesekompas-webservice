@@ -47,7 +47,7 @@ public class SuggestSolrClient extends HttpSolrClient {
             res.setInfixBlended(infixBlendedSuggestions);
             res.setFuzzy(fuzzySuggestions);
         } catch(RuntimeException e) {
-            LOGGER.error("Error parsing SolR suggest response: " + e.getMessage());
+            LOGGER.error("Error parsing SolR suggest response: {}", e);
             throw new SolrServerException("Problem parsing SolR suggest response");
         }
         return res;
@@ -88,7 +88,7 @@ public class SuggestSolrClient extends HttpSolrClient {
                         suggestionPayload[4]
                 );
             default:
-                LOGGER.error("Received the following suggestion from SolR which did not follow scheme: " +
+                LOGGER.error("Received the following suggestion from SolR which did not follow scheme: {}",
                         suggestion.toString());
                 throw new RuntimeException("Recieved suggestion which did not follow the scheme...");
         }

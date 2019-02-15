@@ -30,15 +30,15 @@ import java.util.List;
 @Path("suggest")
 public class SuggestResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuggestResource.class);
-    private SuggestSolrClient solr;
+    SuggestSolrClient solr;
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
-    private String suggesterSolrUrl;
+    String suggesterSolrUrl;
 
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
-    private Integer maxNumberSuggestions;
+    Integer maxNumberSuggestions;
 
     @PostConstruct
     public void initialize() {
@@ -56,7 +56,6 @@ public class SuggestResource {
         }
 
         SuggestQueryResponse response = solr.suggestQuery(query, suggestType);
-        LOGGER.info(response.getInfix().toString());
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.
@@ -68,7 +67,6 @@ public class SuggestResource {
         infix.addAll(fuzzy);
         for(SuggestionEntity suggestion : infix) {
             int index = infix.indexOf(suggestion);
-            LOGGER.info("Index: {} element: {}", index, suggestion);
             switch (suggestion.getType()) {
                 case "TAG":
                     TagSuggestionEntity tag = (TagSuggestionEntity) suggestion;
@@ -88,7 +86,7 @@ public class SuggestResource {
         List<SuggestionEntity> suggestions = new ArrayList<>();
         duplicateRemover.forEach((k,s) -> suggestions.add(s));
 
-        return Response.ok().entity(suggestions.subList(0, maxNumberSuggestions)).build();
+        return Response.ok().entity(suggestions.subList(0, Integer.min(maxNumberSuggestions, suggestions.size()))).build();
     }
 
     @GET

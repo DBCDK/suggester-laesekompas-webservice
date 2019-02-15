@@ -1,8 +1,6 @@
 package dk.dbc.laesekompas.suggester.webservice;
 
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
@@ -29,22 +27,22 @@ import java.util.function.Function;
 @Path("search")
 public class SearchResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
-    private SuggestSolrClient solr;
+    SuggestSolrClient solr;
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
-    private String suggesterSolrUrl;
+    String searchSolrUrl;
 
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
-    private Integer maxNumberSuggestions;
+    Integer maxNumberSuggestions;
 
     @PostConstruct
     public void initialize() {
-        if(!this.suggesterSolrUrl.endsWith("/solr")) {
-            this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
+        if(!this.searchSolrUrl.endsWith("/solr")) {
+            this.searchSolrUrl = this.searchSolrUrl +"/solr";
         }
-        this.solr = new SuggestSolrClient.Builder(suggesterSolrUrl).build();
+        this.solr = new SuggestSolrClient.Builder(searchSolrUrl).build();
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
@@ -57,7 +55,7 @@ public class SearchResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
+    public Response search(@QueryParam("query") String query) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
