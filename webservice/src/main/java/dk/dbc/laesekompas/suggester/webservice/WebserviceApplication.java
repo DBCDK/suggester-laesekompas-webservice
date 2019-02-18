@@ -17,7 +17,7 @@ import java.util.Set;
  * Note: application path must not be "/" if webapp/index.html is to be loaded.
  * </p>
  */
-@ApplicationPath("/")
+@ApplicationPath("api")
 public class WebserviceApplication extends Application {
     private static final Set<Class<?>> classes = new HashSet<>();
     static {
