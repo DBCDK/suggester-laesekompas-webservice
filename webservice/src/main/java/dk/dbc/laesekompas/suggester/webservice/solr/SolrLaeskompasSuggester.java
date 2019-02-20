@@ -62,7 +62,8 @@ public class SolrLaeskompasSuggester {
                 return new TagSuggestionEntity(
                         term,
                         suggestionPayload[1],
-                        Integer.parseInt(suggestionPayload[2])
+                        Integer.parseInt(suggestionPayload[2]),
+                        suggestionPayload[3]
                 );
             case "AUTHOR":
                 return new AuthorSuggestionEntity(

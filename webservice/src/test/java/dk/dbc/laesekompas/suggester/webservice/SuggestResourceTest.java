@@ -229,9 +229,9 @@ public class SuggestResourceTest {
     }
 
     // TEST SOLR CLIENT RESPONSE DATA
-    private static final TagSuggestionEntity test1 = new TagSuggestionEntity("testing","testing",1);
+    private static final TagSuggestionEntity test1 = new TagSuggestionEntity("testing","testing",1, "test_category");
     private static final AuthorSuggestionEntity test2 = new AuthorSuggestionEntity("testing", "testing");
-    private static final TagSuggestionEntity test3 = new TagSuggestionEntity("tasting","tasting",2);
+    private static final TagSuggestionEntity test3 = new TagSuggestionEntity("tasting","tasting",2, "test_category");
 
     private static final SuggestQueryResponse test = new SuggestQueryResponse() {{
         setInfix(new ArrayList<SuggestionEntity>() {{
@@ -293,8 +293,8 @@ public class SuggestResourceTest {
         setFuzzy(new ArrayList<>());
     }};
 
-    private static final TagSuggestionEntity testRemoveDuplicateTag1 = new TagSuggestionEntity("tag1","tag1",1);
-    private static final TagSuggestionEntity testRemoveDuplicateTag2 = new TagSuggestionEntity("tag2","tag1",1);
+    private static final TagSuggestionEntity testRemoveDuplicateTag1 = new TagSuggestionEntity("tag1","tag1",1, "tag_category1");
+    private static final TagSuggestionEntity testRemoveDuplicateTag2 = new TagSuggestionEntity("tag2","tag1",1, "tag_category1");
     private static final SuggestQueryResponse testRemoveDuplicateTag = new SuggestQueryResponse() {{
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateTag1);

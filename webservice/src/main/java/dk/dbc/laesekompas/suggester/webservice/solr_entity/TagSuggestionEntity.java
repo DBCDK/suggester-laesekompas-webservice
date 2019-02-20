@@ -3,11 +3,13 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
 public class TagSuggestionEntity extends SuggestionEntity {
     private String tag;
     private Integer id;
+    private String category;
 
-    public TagSuggestionEntity(String matchedTerm, String tag, Integer id) {
+    public TagSuggestionEntity(String matchedTerm, String tag, Integer id, String category) {
         super(matchedTerm, "TAG");
         this.tag = tag;
         this.id = id;
+        this.category = category;
     }
 
     public Integer getId() {
@@ -24,6 +26,14 @@ public class TagSuggestionEntity extends SuggestionEntity {
 
     public void setTag(String tag) {
         this.tag = tag;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     @Override
