@@ -4,9 +4,9 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntit
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.SuggesterResponse;
 import org.apache.solr.client.solrj.response.Suggestion;
@@ -19,23 +19,24 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SuggestSolrClient extends HttpSolrClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SuggestSolrClient.class);
-    protected SuggestSolrClient(Builder builder) {
-        super(builder);
+public class SolrLaeskompasSuggester {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SolrLaeskompasSuggester.class);
+    private SolrClient solrClient;
+
+    public SolrLaeskompasSuggester(SolrClient solrClient) {
+        this.solrClient = solrClient;
     }
 
     public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType) throws IOException, SolrServerException {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRequestHandler("/"+suggestType.getCollection()+"/suggest");
         solrQuery.setParam("suggest.q", query);
-        QueryResponse resp = this.query(solrQuery);
+        QueryResponse resp = solrClient.query(solrQuery);
         SuggesterResponse suggesterResponse = resp.getSuggesterResponse();
 
 
         SuggestQueryResponse res = new SuggestQueryResponse();
-        Map<String,List<Suggestion>> suggestionHandles = suggesterResponse.getSuggestions();
-        LOGGER.info(suggestionHandles.toString());
+        Map<String, List<Suggestion>> suggestionHandles = suggesterResponse.getSuggestions();
         try {
             List<SuggestionEntity> infixSuggestions = suggestionHandles.get("infix").stream().map(mapToSuggestionEntity)
                     .collect(Collectors.toList());
@@ -51,17 +52,6 @@ public class SuggestSolrClient extends HttpSolrClient {
             throw new SolrServerException("Problem parsing SolR suggest response");
         }
         return res;
-    }
-
-    public static class Builder extends HttpSolrClient.Builder {
-        public Builder(String baseUrl) {
-            super(baseUrl);
-        }
-
-        @Override
-        public SuggestSolrClient build() {
-            return new SuggestSolrClient(this);
-        }
     }
 
     public static final Function<Suggestion, SuggestionEntity> mapToSuggestionEntity = suggestion -> {

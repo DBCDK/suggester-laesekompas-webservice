@@ -1,13 +1,14 @@
 package dk.dbc.laesekompas.suggester.webservice;
 
+import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaeskompasSuggester;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestQueryResponse;
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,8 @@ import java.util.List;
 @Path("suggest")
 public class SuggestResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuggestResource.class);
-    SuggestSolrClient solr;
+    HttpSolrClient solr;
+    SolrLaeskompasSuggester suggester;
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
@@ -45,7 +47,8 @@ public class SuggestResource {
         if(!this.suggesterSolrUrl.endsWith("/solr")) {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
-        this.solr = new SuggestSolrClient.Builder(suggesterSolrUrl).build();
+        this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
+        this.suggester = new SolrLaeskompasSuggester(this.solr);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
@@ -55,7 +58,7 @@ public class SuggestResource {
             return Response.status(400).build();
         }
 
-        SuggestQueryResponse response = solr.suggestQuery(query, suggestType);
+        SuggestQueryResponse response = suggester.suggestQuery(query, suggestType);
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.

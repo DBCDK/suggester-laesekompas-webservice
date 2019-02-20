@@ -1,7 +1,7 @@
 package dk.dbc.laesekompas.suggester.webservice;
 
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -49,7 +49,7 @@ public class SearchResourceTest {
         assertThat(result.parallelStream().collect(Collectors.toList()), IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
-    private static final SuggestSolrClient solr = Mockito.mock(SuggestSolrClient.class);
+    private static final HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
     private static final QueryResponse test = Mockito.mock(QueryResponse.class);
     private static final SolrDocument testDoc1 = new SolrDocument() {{
            addField("pid","pid:63");

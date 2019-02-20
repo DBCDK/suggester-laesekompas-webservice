@@ -1,7 +1,7 @@
 package dk.dbc.laesekompas.suggester.webservice;
 
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
@@ -27,7 +27,7 @@ import java.util.function.Function;
 @Path("search")
 public class SearchResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
-    SuggestSolrClient solr;
+    HttpSolrClient solr;
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
@@ -42,7 +42,7 @@ public class SearchResource {
         if(!this.searchSolrUrl.endsWith("/solr")) {
             this.searchSolrUrl = this.searchSolrUrl +"/solr";
         }
-        this.solr = new SuggestSolrClient.Builder(searchSolrUrl).build();
+        this.solr = new HttpSolrClient.Builder(searchSolrUrl).build();
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 

@@ -1,13 +1,14 @@
 package dk.dbc.laesekompas.suggester.webservice;
 
+import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaeskompasSuggester;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestQueryResponse;
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestSolrClient;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,20 +35,22 @@ public class SuggestResourceTest {
         suggestResource = new SuggestResource();
 
         suggestResource.suggesterSolrUrl = "http://invalid.invalid";
-        SuggestSolrClient solr = Mockito.mock(SuggestSolrClient.class);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test"), Mockito.any(SuggestType.class)))
+        HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
+        SolrLaeskompasSuggester suggester = Mockito.mock(SolrLaeskompasSuggester.class);
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test"), Mockito.any(SuggestType.class)))
                 .thenReturn(test);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test_multiple_type"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test_multiple_type"), Mockito.any(SuggestType.class)))
                 .thenReturn(testMultipleType);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateTitle);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateAuthor);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateTag);
-        Mockito.when(solr.suggestQuery(Mockito.eq("test_max_suggestions"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(Mockito.eq("test_max_suggestions"), Mockito.any(SuggestType.class)))
                 .thenReturn(testMaxSuggestions);
         suggestResource.solr = solr;
+        suggestResource.suggester = suggester;
         suggestResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
 
