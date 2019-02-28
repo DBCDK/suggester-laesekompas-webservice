@@ -254,6 +254,11 @@ public class SuggestResourceTest {
     private static final TagSuggestionEntity test3 = new TagSuggestionEntity("tasting","tasting",2, "test_category");
 
     private static final SuggestQueryResponse test = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(test1);
+            add(test2);
+            add(test3);
+        }});
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(test1);
             add(test2);
@@ -264,6 +269,9 @@ public class SuggestResourceTest {
     }};
 
     private static final SuggestQueryResponse testMultipleType = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(test1);
+        }});
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(test1);
         }});
@@ -288,6 +296,10 @@ public class SuggestResourceTest {
             "workid:1",
             "pid:2");
     private static final SuggestQueryResponse testRemoveDuplicateTitle = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(testRemoveDuplicateTitle1);
+            add(testRemoveDuplicateTitle2);
+        }});
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateTitle1);
             add(testRemoveDuplicateTitle2);
@@ -305,6 +317,10 @@ public class SuggestResourceTest {
             "author1"
     );
     private static final SuggestQueryResponse testRemoveDuplicateAuthor = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(testRemoveDuplicateAuthor1);
+            add(testRemoveDuplicateAuthor2);
+        }});
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateAuthor1);
             add(testRemoveDuplicateAuthor2);
@@ -316,6 +332,10 @@ public class SuggestResourceTest {
     private static final TagSuggestionEntity testRemoveDuplicateTag1 = new TagSuggestionEntity("tag1","tag1",1, "tag_category1");
     private static final TagSuggestionEntity testRemoveDuplicateTag2 = new TagSuggestionEntity("tag2","tag1",1, "tag_category1");
     private static final SuggestQueryResponse testRemoveDuplicateTag = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(testRemoveDuplicateTag1);
+            add(testRemoveDuplicateTag2);
+        }});
         setInfix(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateTag1);
             add(testRemoveDuplicateTag2);
@@ -324,6 +344,11 @@ public class SuggestResourceTest {
         setFuzzy(new ArrayList<>());
     }};
     private static final SuggestQueryResponse testMaxSuggestions = new SuggestQueryResponse() {{
+        setAnalyzer(new ArrayList<SuggestionEntity>() {{
+            add(test1);
+            add(test2);
+            add(test3);
+        }});
        setInfix(new ArrayList<SuggestionEntity>() {{
            add(test1);
            add(test2);

@@ -83,25 +83,25 @@ public class SuggestResource {
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.
         LinkedHashMap<String, SuggestionEntity> duplicateRemover = new LinkedHashMap<>();
-        List<SuggestionEntity> infix = response.getInfix();
+        List<SuggestionEntity> anaylzer = response.getAnalyzer();
+        //List<SuggestionEntity> infix = response.getInfix();
         List<SuggestionEntity> infixBlended = response.getInfixBlended();
         List<SuggestionEntity> fuzzy = response.getFuzzy();
-        infix.addAll(infixBlended);
-        infix.addAll(fuzzy);
-        for(SuggestionEntity suggestion : infix) {
-            int index = infix.indexOf(suggestion);
+        anaylzer.addAll(infixBlended);
+        anaylzer.addAll(fuzzy);
+        for(SuggestionEntity suggestion : anaylzer) {
             switch (suggestion.getType()) {
                 case "TAG":
                     TagSuggestionEntity tag = (TagSuggestionEntity) suggestion;
-                    duplicateRemover.putIfAbsent("tag_id:"+tag.getId(), suggestion);
+                    duplicateRemover.putIfAbsent("tag_id:" + tag.getId(), suggestion);
                     break;
                 case "AUTHOR":
                     AuthorSuggestionEntity author = (AuthorSuggestionEntity) suggestion;
-                    duplicateRemover.putIfAbsent("author_name:"+author.getAuthorName(), author);
+                    duplicateRemover.putIfAbsent("author_name:" + author.getAuthorName(), author);
                     break;
                 case "TITLE":
                     TitleSuggestionEntity title = (TitleSuggestionEntity) suggestion;
-                    duplicateRemover.putIfAbsent("workid:"+title.getWorkid(),title);
+                    duplicateRemover.putIfAbsent("workid:" + title.getWorkid(),title);
                     break;
             }
         }

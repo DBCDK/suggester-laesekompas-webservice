@@ -58,12 +58,15 @@ public class SolrLaeskompasSuggester {
         SuggestQueryResponse res = new SuggestQueryResponse();
         Map<String, List<Suggestion>> suggestionHandles = suggesterResponse.getSuggestions();
         try {
+            List<SuggestionEntity> analyzerSuggestions = suggestionHandles.get("analyzer").stream().map(mapToSuggestionEntity)
+                    .collect(Collectors.toList());
             List<SuggestionEntity> infixSuggestions = suggestionHandles.get("infix").stream().map(mapToSuggestionEntity)
                     .collect(Collectors.toList());
             List<SuggestionEntity> infixBlendedSuggestions = suggestionHandles.get("blended_infix").stream().map(mapToSuggestionEntity)
                     .collect(Collectors.toList());
             List<SuggestionEntity> fuzzySuggestions = suggestionHandles.get("fuzzy").stream().map(mapToSuggestionEntity)
                     .collect(Collectors.toList());
+            res.setAnalyzer(analyzerSuggestions);
             res.setInfix(infixSuggestions);
             res.setInfixBlended(infixBlendedSuggestions);
             res.setFuzzy(fuzzySuggestions);
