@@ -59,10 +59,9 @@ public class SearchResourceIT {
     public void searchQuery() throws IOException, SolrServerException {
         solrClient.add("search", test1);
         solrClient.commit("search");
-        Response response = searchResource.search("john");
+        Response response = searchResource.search("john", null, false, 10);
         SolrDocumentList result = (SolrDocumentList) response.getEntity();
-        assertEquals(result.getNumFound(),1);
-
+        assertEquals(result.getNumFound(), 1);
     }
 
     private static final SolrInputDocument test1 = new SolrInputDocument() {{

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -46,6 +47,7 @@ import java.util.function.Function;
 @Stateless
 @Path("search")
 public class SearchResource {
+    public static final String SOLR_FULL_TEXT_QUERY = "author^6.0 title^5.0 all abstract";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
     HttpSolrClient solr;
 
@@ -66,21 +68,63 @@ public class SearchResource {
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
-    private static final Function<String, SolrParams> searchParams = query -> new MapSolrParams(new HashMap<String, String>() {{
-            put(CommonParams. Q,query);
+    private static final Function<SearchParams, SolrParams> solrSearchParams = params -> new MapSolrParams(new HashMap<String, String>() {{
+            String qf;
+            switch (params.field == null ? "" : params.field) {
+                case "author":
+                    qf = params.exact ? "author_exact" : "author";
+                    break;
+                case "title":
+                    qf = params.exact ? "title_exact" : "title";
+                    break;
+                case "pid":
+                    qf = "pid";
+                    break;
+                case "workid":
+                    qf = "workid";
+                    break;
+                default:
+                    qf = SOLR_FULL_TEXT_QUERY;
+                    break;
+            }
+            put(CommonParams.Q, params.query);
             put("defType", "dismax");
-            put("qf", "author^6.0 title^5.0 all abstract");
+            put("qf", qf);
             put("bf", "log(loans)");
+            put("rows", Integer.toString(params.rows));
         }});
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response search(@QueryParam("query") String query) throws SolrServerException, IOException {
+    public Response search(@QueryParam("query") String query,
+                           @QueryParam("field") String field,
+                           @DefaultValue("false") @QueryParam("exact") boolean exact,
+                           @DefaultValue("10") int rows) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
-        QueryResponse solrResponse = solr.query("search", searchParams.apply(query));
+        QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(new SearchParams(query, field, exact, rows)));
         return Response.ok().entity(solrResponse.getResults()).build();
+    }
+
+    // POJO to pass 4 arguments to solr params function
+    private class SearchParams {
+        String query;
+        String field;
+        boolean exact;
+        int rows;
+
+        SearchParams(String query, String field, boolean exact, int rows) {
+            this.query = query;
+            this.field = field;
+            this.exact = exact;
+            this.rows = rows;
+        }
+
+        @Override
+        public String toString() {
+            return query+"|"+field+"|"+exact+"|"+rows;
+        }
     }
 }

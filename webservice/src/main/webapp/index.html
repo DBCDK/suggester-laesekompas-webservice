@@ -17,9 +17,21 @@
         The query which suggestions are based on, is specified with <kbd>?query</kbd> parameter.
     </p>
     <h2>Searcher part</h2>
-    <var>/search?query={q}</var>
+    <var>/search?query={q}&field={author|title|workid|pid optional}&exact={optional default: false}&rows={optional, default: 10}</var>
     <p>
         The query which suggestions are based on, is specified with <kbd>?query</kbd> parameter.
+    </p>
+    <p>
+        <kbd>field</kbd> specifies which field should be searched, options are author, title, workid and pid. If no
+        <kbd>field</kbd> is specified, a "full-text search" is assumed.
+    </p>
+    <p>
+        <kbd>exact</kbd> specifies whether the query should match exactly. This parameter is only in effect when
+        <kbd>field</kbd> is specified. This is useful for retrieving a specific title, or documents from a specific
+        author.
+    </p>
+    <p>
+        <kbd>rows</kbd> specifies the maximum number of rows returned, defaults to 10.
     </p>
     <a href="https://github.com/DBCDK/suggester-laesekompas-webservice">Source code</a>
 </body>
