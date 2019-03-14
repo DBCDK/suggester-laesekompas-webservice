@@ -88,7 +88,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
-                            put("rows", "10");
+                            put(CommonParams.ROWS, "10");
                         }})))
                 )
         ).thenReturn(test);
@@ -99,7 +99,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
-                            put("rows", "20");
+                            put(CommonParams.ROWS, "20");
                         }})))
                 )
         ).thenReturn(test);
@@ -110,7 +110,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", "author");
                             put("bf", "log(loans)");
-                            put("rows", "10");
+                            put(CommonParams.ROWS, "10");
                         }})))
                 )
         ).thenReturn(test);
@@ -121,7 +121,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", "author_exact");
                             put("bf", "log(loans)");
-                            put("rows", "10");
+                            put(CommonParams.ROWS, "10");
                         }})))
                 )
         ).thenReturn(test);
@@ -132,7 +132,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", "title");
                             put("bf", "log(loans)");
-                            put("rows", "10");
+                            put(CommonParams.ROWS, "10");
                         }})))
                 )
         ).thenReturn(test);
@@ -143,7 +143,7 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", "title_exact");
                             put("bf", "log(loans)");
-                            put("rows", "10");
+                            put(CommonParams.ROWS, "10");
                         }})))
                 )
         ).thenReturn(test);
@@ -153,7 +153,7 @@ public class SearchResourceTest {
 
     @Test
     public void getSearchReturnsResults() throws IOException, SolrServerException {
-        Response response = searchResource.search("john", null, false, 10);
+        Response response = searchResource.search("john", "", false, 10);
         SolrDocumentList result = (SolrDocumentList) response.getEntity();
 
         List<SolrDocument> expectedList = Arrays.asList(testDoc1);
@@ -187,7 +187,7 @@ public class SearchResourceTest {
     @Test
     public void rowsProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("rows", null, false, 20);
+        searchResource.search("rows", "", false, 20);
     }
 
     private static final HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);

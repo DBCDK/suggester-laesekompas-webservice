@@ -70,7 +70,7 @@ public class SearchResource {
 
     private static final Function<SearchParams, SolrParams> solrSearchParams = params -> new MapSolrParams(new HashMap<String, String>() {{
             String qf;
-            switch (params.field == null ? "" : params.field) {
+            switch (params.field) {
                 case "author":
                     qf = params.exact ? "author_exact" : "author";
                     break;
@@ -91,19 +91,22 @@ public class SearchResource {
             put("defType", "dismax");
             put("qf", qf);
             put("bf", "log(loans)");
-            put("rows", Integer.toString(params.rows));
+            put(CommonParams.ROWS, Integer.toString(params.rows));
         }});
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response search(@QueryParam("query") String query,
-                           @QueryParam("field") String field,
+                           @DefaultValue("") @QueryParam("field") String field,
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
-                           @DefaultValue("10") int rows) throws SolrServerException, IOException {
+                           @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
+        LOGGER.info("Search request...");
         // We require a query
         if (query == null) {
+            LOGGER.info("Request without query sent...");
             return Response.status(400).build();
         }
+        LOGGER.info(solrSearchParams.apply(new SearchParams(query, field, exact, rows)).toString());
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(new SearchParams(query, field, exact, rows)));
         return Response.ok().entity(solrResponse.getResults()).build();
     }
