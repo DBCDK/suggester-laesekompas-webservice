@@ -100,13 +100,10 @@ public class SearchResource {
                            @DefaultValue("") @QueryParam("field") String field,
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
-        LOGGER.info("Search request...");
         // We require a query
         if (query == null) {
-            LOGGER.info("Request without query sent...");
             return Response.status(400).build();
         }
-        LOGGER.info(solrSearchParams.apply(new SearchParams(query, field, exact, rows)).toString());
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(new SearchParams(query, field, exact, rows)));
         return Response.ok().entity(solrResponse.getResults()).build();
     }
