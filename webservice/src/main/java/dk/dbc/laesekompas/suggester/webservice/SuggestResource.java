@@ -101,7 +101,7 @@ public class SuggestResource {
                     break;
                 case "TITLE":
                     TitleSuggestionEntity title = (TitleSuggestionEntity) suggestion;
-                    duplicateRemover.putIfAbsent("workid:" + title.getWorkid(),title);
+                    duplicateRemover.putIfAbsent("pid:" + title.getPid(), title);
                     break;
             }
         }
