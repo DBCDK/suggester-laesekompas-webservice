@@ -26,8 +26,8 @@ public class TitleSuggestionEntity extends SuggestionEntity {
     private String workid;
     private String pid;
 
-    public TitleSuggestionEntity(String matchedTerm, String title, String authorName, String workid, String pid) {
-        super(matchedTerm, "TITLE");
+    public TitleSuggestionEntity(String matchedTerm, long weight, String title, String authorName, String workid, String pid) {
+        super(matchedTerm, "TITLE", weight);
         this.title = title;
         this.authorName = authorName;
         this.workid = workid;

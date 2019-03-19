@@ -1,4 +1,4 @@
-package dk.dbc.laesekompas.suggester.webservice.solr_entity;
+package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
@@ -17,36 +17,34 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * File created: 20/02/2019
+ * File created: 15/03/2019
  */
 
-public class AuthorSuggestionEntity extends SuggestionEntity {
-    private String authorName;
+import org.apache.solr.common.params.MapSolrParams;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 
-    public AuthorSuggestionEntity(String matchedTerm, long weight, String authorName) {
-        super(matchedTerm, "AUTHOR", weight);
-        this.authorName = authorName;
-    }
+public class SolrParamsMatcher extends BaseMatcher<MapSolrParams> {
+    private MapSolrParams toEqual;
 
-    public String getAuthorName() {
-        return authorName;
-    }
-
-    public void setAuthorName(String authorName) {
-        this.authorName = authorName;
+    public SolrParamsMatcher(MapSolrParams toEqual) {
+        this.toEqual = toEqual;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean matches(Object item) {
+        if (toEqual == item) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (item == null || toEqual.getClass() != item.getClass()) {
             return false;
         }
-        AuthorSuggestionEntity that = (AuthorSuggestionEntity) o;
-        return (this.matchedTerm.equals(that.matchedTerm)) &&
-                (this.type.equals(that.type)) &&
-                (this.authorName.equals(that.authorName));
+        return toEqual.getMap().equals(((MapSolrParams)item).getMap());
     }
+
+    @Override
+    public void describeMismatch(Object item, Description mismatchDescription) {}
+
+    @Override
+    public void describeTo(Description description) {}
 }

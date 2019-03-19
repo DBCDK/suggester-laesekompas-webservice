@@ -20,7 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
-import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaeskompasSuggester;
+import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaesekompasSuggester;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestQueryResponse;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
@@ -52,7 +52,7 @@ import java.util.List;
 public class SuggestResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuggestResource.class);
     HttpSolrClient solr;
-    SolrLaeskompasSuggester suggester;
+    SolrLaesekompasSuggester suggester;
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
@@ -68,7 +68,7 @@ public class SuggestResource {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
-        this.suggester = new SolrLaeskompasSuggester(this.solr);
+        this.suggester = new SolrLaesekompasSuggester(this.solr);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 

@@ -27,8 +27,6 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,31 +47,6 @@ public class SearchResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
     private static final Logger log = LoggerFactory.getLogger(SearchResourceTest.class);
     private SearchResource searchResource;
-
-    private class SolrParamsMatcher extends BaseMatcher<MapSolrParams> {
-        private MapSolrParams toEqual;
-
-        public SolrParamsMatcher(MapSolrParams toEqual) {
-            this.toEqual = toEqual;
-        }
-
-        @Override
-        public boolean matches(Object item) {
-            if (toEqual == item) {
-                return true;
-            }
-            if (item == null || toEqual.getClass() != item.getClass()) {
-                return false;
-            }
-            return toEqual.getMap().equals(((MapSolrParams)item).getMap());
-        }
-
-        @Override
-        public void describeMismatch(Object item, Description mismatchDescription) {}
-
-        @Override
-        public void describeTo(Description description) {}
-    }
 
     @Before
     public void setupBean() throws IOException, SolrServerException {

@@ -20,7 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
-import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaeskompasSuggester;
+import dk.dbc.laesekompas.suggester.webservice.solr.SolrLaesekompasSuggester;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestQueryResponse;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
@@ -56,7 +56,7 @@ public class SuggestResourceTest {
 
         suggestResource.suggesterSolrUrl = "http://invalid.invalid";
         HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
-        SolrLaeskompasSuggester suggester = Mockito.mock(SolrLaeskompasSuggester.class);
+        SolrLaesekompasSuggester suggester = Mockito.mock(SolrLaesekompasSuggester.class);
         Mockito.when(suggester.suggestQuery(Mockito.eq("test"), Mockito.any(SuggestType.class)))
                 .thenReturn(test);
         Mockito.when(suggester.suggestQuery(Mockito.eq("test_multiple_type"), Mockito.any(SuggestType.class)))
@@ -249,9 +249,9 @@ public class SuggestResourceTest {
     }
 
     // TEST SOLR CLIENT RESPONSE DATA
-    private static final TagSuggestionEntity test1 = new TagSuggestionEntity("testing","testing",1, "test_category");
-    private static final AuthorSuggestionEntity test2 = new AuthorSuggestionEntity("testing", "testing");
-    private static final TagSuggestionEntity test3 = new TagSuggestionEntity("tasting","tasting",2, "test_category");
+    private static final TagSuggestionEntity test1 = new TagSuggestionEntity("testing", 1, "testing",1, "test_category");
+    private static final AuthorSuggestionEntity test2 = new AuthorSuggestionEntity("testing", 1, "testing");
+    private static final TagSuggestionEntity test3 = new TagSuggestionEntity("tasting", 1, "tasting",2, "test_category");
 
     private static final SuggestQueryResponse test = new SuggestQueryResponse() {{
         setAnalyzer(new ArrayList<SuggestionEntity>() {{
@@ -285,16 +285,18 @@ public class SuggestResourceTest {
 
     private static final TitleSuggestionEntity testRemoveDuplicateTitle1 = new TitleSuggestionEntity(
             "tt",
+            1,
             "title1",
             "author1",
             "workid:1",
             "pid:1");
     private static final TitleSuggestionEntity testRemoveDuplicateTitle2 = new TitleSuggestionEntity(
             "tt",
+            1,
             "title1",
             "author1",
             "workid:1",
-            "pid:2");
+            "pid:1");
     private static final SuggestQueryResponse testRemoveDuplicateTitle = new SuggestQueryResponse() {{
         setAnalyzer(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateTitle1);
@@ -310,10 +312,12 @@ public class SuggestResourceTest {
 
     private static final AuthorSuggestionEntity testRemoveDuplicateAuthor1 = new AuthorSuggestionEntity(
             "tt",
+            1,
             "author1"
     );
     private static final AuthorSuggestionEntity testRemoveDuplicateAuthor2 = new AuthorSuggestionEntity(
             "tty",
+            1,
             "author1"
     );
     private static final SuggestQueryResponse testRemoveDuplicateAuthor = new SuggestQueryResponse() {{
@@ -329,8 +333,8 @@ public class SuggestResourceTest {
         setFuzzy(new ArrayList<>());
     }};
 
-    private static final TagSuggestionEntity testRemoveDuplicateTag1 = new TagSuggestionEntity("tag1","tag1",1, "tag_category1");
-    private static final TagSuggestionEntity testRemoveDuplicateTag2 = new TagSuggestionEntity("tag2","tag1",1, "tag_category1");
+    private static final TagSuggestionEntity testRemoveDuplicateTag1 = new TagSuggestionEntity("tag1", 1, "tag1",1, "tag_category1");
+    private static final TagSuggestionEntity testRemoveDuplicateTag2 = new TagSuggestionEntity("tag2", 1, "tag1",1, "tag_category1");
     private static final SuggestQueryResponse testRemoveDuplicateTag = new SuggestQueryResponse() {{
         setAnalyzer(new ArrayList<SuggestionEntity>() {{
             add(testRemoveDuplicateTag1);

@@ -25,8 +25,8 @@ public class TagSuggestionEntity extends SuggestionEntity {
     private Integer id;
     private String category;
 
-    public TagSuggestionEntity(String matchedTerm, String tag, Integer id, String category) {
-        super(matchedTerm, "TAG");
+    public TagSuggestionEntity(String matchedTerm, long weight, String tag, Integer id, String category) {
+        super(matchedTerm, "TAG", weight);
         this.tag = tag;
         this.id = id;
         this.category = category;

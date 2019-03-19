@@ -140,7 +140,7 @@ public class SuggestResourceIT {
         suggestResource.suggestAll("drama");
     }
 
-    private static final AuthorSuggestionEntity author1 = new AuthorSuggestionEntity("John Green","John Green");
+    private static final AuthorSuggestionEntity author1 = new AuthorSuggestionEntity("John Green", 1, "John Green");
     private static final SolrInputDocument authorInputDoc1 = new SolrInputDocument() {{
         addField("str","John Green");
         addField("type","AUTHOR");
@@ -151,7 +151,7 @@ public class SuggestResourceIT {
         addField("type","AUTHOR");
         addField("payload","AUTHOR|John S. C. Abbott");
     }};
-    private static final AuthorSuggestionEntity author2 = new AuthorSuggestionEntity("John S. C. Abbott","John S. C. Abbott");
+    private static final AuthorSuggestionEntity author2 = new AuthorSuggestionEntity("John S. C. Abbott", 1, "John S. C. Abbott");
 
     private static final SolrInputDocument titleMissingDataInputDoc = new SolrInputDocument() {{
         addField("str","Kongens fald");
