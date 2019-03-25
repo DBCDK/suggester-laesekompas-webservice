@@ -20,6 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -60,8 +62,8 @@ public class SearchResourceIT {
         solrClient.add("search", test1);
         solrClient.commit("search");
         Response response = searchResource.search("john", "", false, false, 10);
-        SolrDocumentList result = (SolrDocumentList) response.getEntity();
-        assertEquals(result.getNumFound(), 1);
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+        assertEquals(result.size(), 1);
     }
 
     private static final SolrInputDocument test1 = new SolrInputDocument() {{
