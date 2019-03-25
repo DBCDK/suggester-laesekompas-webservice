@@ -20,6 +20,8 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -36,10 +38,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertThat;
 
@@ -120,47 +122,68 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        Mockito.when(testMergeWorkID.getResults()).thenReturn(testMergeWorkIDDocs);
+        Mockito.when(
+                solr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "merge");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "10");
+                        }})))
+                )
+        ).thenReturn(testMergeWorkID);
         searchResource.solr = solr;
         searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
 
     @Test
     public void getSearchReturnsResults() throws IOException, SolrServerException {
-        Response response = searchResource.search("john", "", false, 10);
-        SolrDocumentList result = (SolrDocumentList) response.getEntity();
+        Response response = searchResource.search("john", "", false, false, 10);
+        ArrayList<SearchEntity> result = (ArrayList<SearchEntity>) response.getEntity();
 
-        List<SolrDocument> expectedList = Arrays.asList(testDoc1);
-        assertThat(result.parallelStream().collect(Collectors.toList()), IsIterableContainingInOrder.contains(expectedList.toArray()));
+        List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
+        assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
     @Test
     public void fieldQueryParamAuthorProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field", "author", false, 10);
+        searchResource.search("author_field", "author", false, false, 10);
     }
 
     @Test
     public void fieldQueryParamAuthorExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field_exact", "author", true, 10);
+        searchResource.search("author_field_exact", "author", true, false, 10);
     }
 
     @Test
     public void fieldQueryParamTitleProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field", "title", false, 10);
+        searchResource.search("title_field", "title", false, false, 10);
     }
 
     @Test
     public void fieldQueryParamTitleExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field_exact", "title", true, 10);
+        searchResource.search("title_field_exact", "title", true, false, 10);
     }
 
     @Test
     public void rowsProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("rows", "", false, 20);
+        searchResource.search("rows", "", false, false, 20);
+    }
+
+    @Test
+    public void mergeWorkIDParam() throws IOException, SolrServerException {
+        Response response = searchResource.search("merge", "", false, true, 10);
+        ArrayList<SearchEntity> result = (ArrayList<SearchEntity>) response.getEntity();
+
+        List<SearchEntity> expectedList = Arrays.asList(testMergeWorkID1, testMergeWorkID2, testMergeWorkID3);
+        assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
     private static final HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
@@ -174,7 +197,92 @@ public class SearchResourceTest {
            addField("loans",1);
            addField("_version_","123");
        }};
+    private static final SearchEntity testDocSearchEntity1 = new SearchEntity("pid:63",
+            "workid:73",
+            "John",
+            "Cynthia Lennon",
+            SearchEntityType.BOOK,
+            1,
+            0
+    );
     private static final SolrDocumentList testDocs = new SolrDocumentList() {{
        add(testDoc1);
+    }};
+    // Merge workID test
+    private static final QueryResponse testMergeWorkID = Mockito.mock(QueryResponse.class);
+    private static final SolrDocument testMergeWorkIDDoc1 = new SolrDocument() {{
+        addField("pid","pid:1");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:1");
+        addField("title","merge1");
+        addField("type","Ebog");
+        addField("loans",1);
+    }};
+    private static final SolrDocument testMergeWorkIDDoc2 = new SolrDocument() {{
+        addField("pid","pid:2");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:1");
+        addField("title","merge2");
+        addField("type","Bog");
+        addField("loans",1);
+    }};
+    private static final SolrDocument testMergeWorkIDDoc3 = new SolrDocument() {{
+        addField("pid","pid:3");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:2");
+        addField("title","merge3");
+        addField("type","Lydbog (net)");
+        addField("loans",1);
+    }};
+    private static final SolrDocument testMergeWorkIDDoc4 = new SolrDocument() {{
+        addField("pid","pid:4");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:3");
+        addField("title","merge4");
+        addField("type","Lydbog (net)");
+        addField("loans",1);
+    }};
+    private static final SolrDocument testMergeWorkIDDoc5 = new SolrDocument() {{
+        addField("pid","pid:5");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:3");
+        addField("title","merge5");
+        addField("type","Ebog");
+        addField("loans",1);
+    }};
+    // Test that it selects the book, even though it is ranked lower (testMergeWorkIDDoc2)
+    private static final SearchEntity testMergeWorkID1 = new SearchEntity("pid:2",
+            "workid:1",
+            "merge2",
+            "Merge Mc. Merging",
+            SearchEntityType.BOOK,
+            1,
+            0
+    );
+    // Test that a non-book can be included, if no books can be picked (testMergeWorkIDDoc3)
+    private static final SearchEntity testMergeWorkID2 = new SearchEntity("pid:3",
+            "workid:2",
+            "merge3",
+            "Merge Mc. Merging",
+            SearchEntityType.AUDIO_BOOK,
+            1,
+            0
+    );
+    // Test that if no book can be picked, pick the highest ranked manifestation regardless if it is
+    // a audio book or E book (testMergeWorkIDDoc4)
+    private static final SearchEntity testMergeWorkID3 = new SearchEntity("pid:4",
+            "workid:3",
+            "merge4",
+            "Merge Mc. Merging",
+            SearchEntityType.AUDIO_BOOK,
+            1,
+            0
+    );
+    private static final SolrDocumentList testMergeWorkIDDocs = new SolrDocumentList() {{
+        add(testMergeWorkIDDoc1);
+        add(testMergeWorkIDDoc2);
+        add(testMergeWorkIDDoc3);
+        add(testMergeWorkIDDoc4);
+        add(testMergeWorkIDDoc5);
     }};
 }

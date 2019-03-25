@@ -20,9 +20,12 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
@@ -41,8 +44,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("search")
@@ -99,13 +105,70 @@ public class SearchResource {
     public Response search(@QueryParam("query") String query,
                            @DefaultValue("") @QueryParam("field") String field,
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
+                           @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
                            @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
-        QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(new SearchParams(query, field, exact, rows)));
-        return Response.ok().entity(solrResponse.getResults()).build();
+        QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
+                new SearchParams(query, field, exact, rows)
+        ));
+
+        int i = 0;
+        List<SearchEntity> searchResults = new ArrayList<>();
+        for (SolrDocument doc : solrResponse.getResults()) {
+            SearchEntityType type;
+            String docType = (String)doc.get("type");
+            switch (docType){
+                case "Bog":
+                    type = SearchEntityType.BOOK;
+                    break;
+                case "Ebog":
+                    type = SearchEntityType.E_BOOK;
+                    break;
+                case "Lydbog (net)":
+                    type = SearchEntityType.AUDIO_BOOK;
+                    break;
+                default:
+                    // Even though SolR is being wierd in this case, we do not fail
+                    LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
+                    type = SearchEntityType.BOOK;
+                    break;
+            }
+            searchResults.add(new SearchEntity(
+                    (String)doc.get("pid"),
+                    (String)doc.get("workid"),
+                    (String)doc.get("title"),
+                    (String)doc.get("author"),
+                    type,
+                    (int)doc.get("loans"),
+                    i)
+            );
+            i += 1;
+        }
+        if (mergeWorkID) {
+            HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
+            for (SearchEntity searchEntity : searchResults) {
+                duplicateRemover.merge(searchEntity.getWorkid(), searchEntity, (se1, se2) -> {
+                    //if (searchEntity.getType() == SearchEntityType.BOOK) {
+                    //    if (searchEntity.getOrder() < se.getOrder()) return searchEntity; else return se;
+                    //}
+                    if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
+                        return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
+                    } else if (se1.getType() == SearchEntityType.BOOK) return se1;
+                    else if (se2.getType() == SearchEntityType.BOOK) return se2;
+                    else {
+                        return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
+                    }
+                });
+            }
+            searchResults = duplicateRemover.values().parallelStream()
+                    // Order integers are never the same
+                    .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
+                    .collect(Collectors.toList());
+        }
+        return Response.ok().entity(searchResults).build();
     }
 
     // POJO to pass 4 arguments to solr params function

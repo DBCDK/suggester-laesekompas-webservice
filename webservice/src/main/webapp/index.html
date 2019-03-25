@@ -31,6 +31,11 @@
         author.
     </p>
     <p>
+        <kbd>merge_workid</kbd> boolean flag indicating if only 1 manifestation pr. work should be returned. Merges on
+        workid, selects book, then EBook then audio book. The manifestation of each category (book/ebook/audio book) is
+        the most "popular" book, meaning the one with most loans, if there is a tie, the most recently registered.
+    </p>
+    <p>
         <kbd>rows</kbd> specifies the maximum number of rows returned, defaults to 10.
     </p>
     <a href="https://github.com/DBCDK/suggester-laesekompas-webservice">Source code</a>
