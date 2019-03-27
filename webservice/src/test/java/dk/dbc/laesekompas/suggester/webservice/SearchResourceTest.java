@@ -38,12 +38,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class SearchResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
@@ -130,10 +129,46 @@ public class SearchResourceTest {
                             put("defType", "dismax");
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
-                            put(CommonParams.ROWS, "10");
+                            put(CommonParams.ROWS, "30");
                         }})))
                 )
         ).thenReturn(testMergeWorkID);
+        Mockito.when(testMergeWorkIDAPost.getResults()).thenReturn(testMergeWorkIDAPostDocs);
+        Mockito.when(
+                solr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "merge a-post");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "30");
+                        }})))
+                )
+        ).thenReturn(testMergeWorkIDAPost);
+        Mockito.when(testMergeWorkIDNumRows.getResults()).thenReturn(testMergeWorkIDNumRowsDocs);
+        Mockito.when(
+                solr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "merge #rows");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "6");
+                        }})))
+                )
+        ).thenReturn(testMergeWorkIDNumRows);
+        Mockito.when(testMergeWorkIDFewRows.getResults()).thenReturn(testMergeWorkIDFewRowsDocs);
+        Mockito.when(
+                solr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "merge #rows few");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "15");
+                        }})))
+                )
+        ).thenReturn(testMergeWorkIDFewRows);
         searchResource.solr = solr;
         searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
@@ -141,7 +176,7 @@ public class SearchResourceTest {
     @Test
     public void getSearchReturnsResults() throws IOException, SolrServerException {
         Response response = searchResource.search("john", "", false, false, 10);
-        ArrayList<SearchEntity> result = (ArrayList<SearchEntity>) response.getEntity();
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
@@ -180,9 +215,38 @@ public class SearchResourceTest {
     @Test
     public void mergeWorkIDParam() throws IOException, SolrServerException {
         Response response = searchResource.search("merge", "", false, true, 10);
-        ArrayList<SearchEntity> result = (ArrayList<SearchEntity>) response.getEntity();
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkID1, testMergeWorkID2, testMergeWorkID3);
+        assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
+    }
+
+    @Test
+    public void mergeReturnAtMostRequestedNumRows() throws IOException, SolrServerException {
+        int rows = 2;
+        Response response = searchResource.search("merge #rows", "", false, true, rows);
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        assertEquals(result.size(), rows);
+    }
+
+    @Test
+    public void mergeDontFailOnFewResults() throws IOException, SolrServerException {
+        int rows = 5;
+        Response response = searchResource.search("merge #rows few", "", false, true, rows);
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        // Test that the test is essentially testing what it is supposed to
+        assert(testMergeWorkIDFewRowsDocs.size() < rows);
+        assertEquals(result.size(), testMergeWorkIDFewRowsDocs.size());
+    }
+
+    @Test
+    public void mergeWorkIdPrioritizeAPost() throws IOException, SolrServerException {
+        Response response = searchResource.search("merge a-post", "", false, true, 10);
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        List<SearchEntity> expectedList = Arrays.asList(testMergeWorkIDAPost1, testMergeWorkIDAPost2);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -195,6 +259,7 @@ public class SearchResourceTest {
            addField("title","John");
            addField("type","Bog");
            addField("loans",1);
+           addField("a_post",false);
            addField("_version_","123");
        }};
     private static final SearchEntity testDocSearchEntity1 = new SearchEntity("pid:63",
@@ -203,6 +268,7 @@ public class SearchResourceTest {
             "Cynthia Lennon",
             SearchEntityType.BOOK,
             1,
+            false,
             0
     );
     private static final SolrDocumentList testDocs = new SolrDocumentList() {{
@@ -217,6 +283,7 @@ public class SearchResourceTest {
         addField("title","merge1");
         addField("type","Ebog");
         addField("loans",1);
+        addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc2 = new SolrDocument() {{
         addField("pid","pid:2");
@@ -225,6 +292,7 @@ public class SearchResourceTest {
         addField("title","merge2");
         addField("type","Bog");
         addField("loans",1);
+        addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc3 = new SolrDocument() {{
         addField("pid","pid:3");
@@ -233,6 +301,7 @@ public class SearchResourceTest {
         addField("title","merge3");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc4 = new SolrDocument() {{
         addField("pid","pid:4");
@@ -241,6 +310,7 @@ public class SearchResourceTest {
         addField("title","merge4");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc5 = new SolrDocument() {{
         addField("pid","pid:5");
@@ -249,6 +319,7 @@ public class SearchResourceTest {
         addField("title","merge5");
         addField("type","Ebog");
         addField("loans",1);
+        addField("a_post",false);
     }};
     // Test that it selects the book, even though it is ranked lower (testMergeWorkIDDoc2)
     private static final SearchEntity testMergeWorkID1 = new SearchEntity("pid:2",
@@ -257,6 +328,7 @@ public class SearchResourceTest {
             "Merge Mc. Merging",
             SearchEntityType.BOOK,
             1,
+            false,
             0
     );
     // Test that a non-book can be included, if no books can be picked (testMergeWorkIDDoc3)
@@ -266,6 +338,7 @@ public class SearchResourceTest {
             "Merge Mc. Merging",
             SearchEntityType.AUDIO_BOOK,
             1,
+            false,
             0
     );
     // Test that if no book can be picked, pick the highest ranked manifestation regardless if it is
@@ -276,6 +349,7 @@ public class SearchResourceTest {
             "Merge Mc. Merging",
             SearchEntityType.AUDIO_BOOK,
             1,
+            false,
             0
     );
     private static final SolrDocumentList testMergeWorkIDDocs = new SolrDocumentList() {{
@@ -284,5 +358,111 @@ public class SearchResourceTest {
         add(testMergeWorkIDDoc3);
         add(testMergeWorkIDDoc4);
         add(testMergeWorkIDDoc5);
+    }};
+
+    // Test merging and prefer A-posts
+    private static final QueryResponse testMergeWorkIDAPost = Mockito.mock(QueryResponse.class);
+    private static final SolrDocument testMergeWorkIDAPostDoc1 = new SolrDocument() {{
+        addField("pid","pid:1");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:1");
+        addField("title","merge1");
+        addField("type","Ebog");
+        addField("loans",1);
+        addField("a_post",true);
+    }};
+    private static final SolrDocument testMergeWorkIDAPostDoc2 = new SolrDocument() {{
+        addField("pid","pid:2");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:1");
+        addField("title","merge2");
+        addField("type","Bog");
+        addField("loans",1);
+        addField("a_post",false);
+    }};
+    private static final SolrDocument testMergeWorkIDAPostDoc3 = new SolrDocument() {{
+        addField("pid","pid:3");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:2");
+        addField("title","merge3");
+        addField("type","Lydbog (net)");
+        addField("loans",1);
+        addField("a_post",false);
+    }};
+    private static final SolrDocument testMergeWorkIDAPostDoc4 = new SolrDocument() {{
+        addField("pid","pid:4");
+        addField("author","Merge Mc. Merging");
+        addField("workid","workid:2");
+        addField("title","merge4");
+        addField("type","Lydbog (net)");
+        addField("loans",1);
+        addField("a_post",true);
+    }};
+    // Test that it selects the A-post, even though a book is in the same work (testMergeWorkIDDoc1)
+    private static final SearchEntity testMergeWorkIDAPost1 = new SearchEntity("pid:1",
+            "workid:1",
+            "merge1",
+            "Merge Mc. Merging",
+            SearchEntityType.E_BOOK,
+            1,
+            true,
+            0
+    );
+    // Test that if A-post is ranked lower in the work, it is still picked (testMergeWorkIDDoc4)
+    private static final SearchEntity testMergeWorkIDAPost2 = new SearchEntity("pid:4",
+            "workid:2",
+            "merge4",
+            "Merge Mc. Merging",
+            SearchEntityType.AUDIO_BOOK,
+            1,
+            true,
+            0
+    );
+    private static final SolrDocumentList testMergeWorkIDAPostDocs = new SolrDocumentList() {{
+        add(testMergeWorkIDAPostDoc1);
+        add(testMergeWorkIDAPostDoc2);
+        add(testMergeWorkIDAPostDoc3);
+        add(testMergeWorkIDAPostDoc4);
+    }};
+    // Test merge return at most #rows
+    private static final QueryResponse testMergeWorkIDNumRows = Mockito.mock(QueryResponse.class);
+    private static final SolrDocument testDoc2 = new SolrDocument() {{
+        addField("pid","pid:45");
+        addField("author","Pierre Lemaitre");
+        addField("workid","workid:372");
+        addField("title","Rosy & John");
+        addField("type","Bog");
+        addField("loans",1);
+        addField("a_post",false);
+    }};
+    private static final SolrDocument testDoc3 = new SolrDocument() {{
+        addField("pid","pid:91");
+        addField("author","Karsten Jørgensen");
+        addField("workid","workid:1282");
+        addField("title","John Lennon");
+        addField("type","Ebog");
+        addField("loans",1);
+        addField("a_post",true);
+    }};
+    private static final SolrDocument testDoc4 = new SolrDocument() {{
+        addField("pid","pid:126");
+        addField("author","Mark Bego");
+        addField("workid","workid:8392");
+        addField("title","Elton John");
+        addField("type","Lydbog (net)");
+        addField("loans",1);
+        addField("a_post",false);
+    }};
+    private static final SolrDocumentList testMergeWorkIDNumRowsDocs = new SolrDocumentList() {{
+        add(testDoc1);
+        add(testDoc2);
+        add(testDoc3);
+        add(testDoc4);
+    }};
+    // Test merge return few results
+    private static final QueryResponse testMergeWorkIDFewRows = Mockito.mock(QueryResponse.class);
+    private static final SolrDocumentList testMergeWorkIDFewRowsDocs = new SolrDocumentList() {{
+        add(testDoc1);
+        add(testDoc2);
     }};
 }

@@ -107,12 +107,14 @@ public class SearchResource {
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
                            @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
+        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
-                new SearchParams(query, field, exact, rows)
+                // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
+                new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1))
         ));
 
         int i = 0;
@@ -143,6 +145,7 @@ public class SearchResource {
                     (String)doc.get("author"),
                     type,
                     (int)doc.get("loans"),
+                    (boolean)doc.get("a_post"),
                     i)
             );
             i += 1;
@@ -151,14 +154,17 @@ public class SearchResource {
             HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
             for (SearchEntity searchEntity : searchResults) {
                 duplicateRemover.merge(searchEntity.getWorkid(), searchEntity, (se1, se2) -> {
-                    //if (searchEntity.getType() == SearchEntityType.BOOK) {
-                    //    if (searchEntity.getOrder() < se.getOrder()) return searchEntity; else return se;
-                    //}
-                    if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
+                    // When selecting a document to represent the work, we prefer A-posts, then books, then the highest
+                    // ranked. Regardless if both are or aren't A-posts, we continue with prioritizing books and the
+                    // highest ranked
+                    if (se1.getAPost() != se2.getAPost()) {
+                        if(se1.getAPost()) return se1; else return se2;
+                    } else if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
                         return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
                     } else if (se1.getType() == SearchEntityType.BOOK) return se1;
                     else if (se2.getType() == SearchEntityType.BOOK) return se2;
                     else {
+                        // Order assignment is strictly increasing, which why they can never be equal
                         return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
                     }
                 });
@@ -168,7 +174,10 @@ public class SearchResource {
                     .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
                     .collect(Collectors.toList());
         }
-        return Response.ok().entity(searchResults).build();
+        // If mergeWorkId is set, but not all works has 3 manifestations, we could potentially have more than 'rows'
+        // results, which is why we create the sublist. We might also have less than 'rows' results if the SolR search
+        // did not return 'rows' results, which we must account for
+        return Response.ok().entity(searchResults.subList(0, Integer.min(rows, searchResults.size()))).build();
     }
 
     // POJO to pass 4 arguments to solr params function

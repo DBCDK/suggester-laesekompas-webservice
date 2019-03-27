@@ -27,15 +27,25 @@ public class SearchEntity {
     private String author;
     private SearchEntityType type;
     private int loans;
+    private boolean aPost;
     private int order;
 
-    public SearchEntity(String pid, String workid, String title, String author, SearchEntityType type, int loans, int order) {
+    public SearchEntity(
+            String pid,
+            String workid,
+            String title,
+            String author,
+            SearchEntityType type,
+            int loans,
+            boolean aPost,
+            int order) {
         this.pid = pid;
         this.workid = workid;
         this.title = title;
         this.author = author;
         this.type = type;
         this.loans = loans;
+        this.aPost = aPost;
         this.order = order;
     }
 
@@ -53,6 +63,7 @@ public class SearchEntity {
                 (this.workid.equals(that.workid)) &&
                 (this.title.equals(that.title)) &&
                 (this.author.equals(that.author)) &&
+                (this.aPost == that.aPost) &&
                 (this.loans == that.loans);
     }
 
@@ -107,6 +118,14 @@ public class SearchEntity {
 
     public void setLoans(int loans) {
         this.loans = loans;
+    }
+
+    public boolean getAPost() {
+        return aPost;
+    }
+
+    public void setAPost(boolean aPost) {
+        this.aPost = aPost;
     }
 
     public int getOrder() {

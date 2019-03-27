@@ -73,5 +73,6 @@ public class SearchResourceIT {
         addField("pid", "pid:13");
         addField("type", "Bog");
         addField("loans", 4);
+        addField("a_post", false);
     }};
 }
