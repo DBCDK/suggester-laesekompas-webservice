@@ -32,6 +32,7 @@ import org.apache.solr.common.params.SolrParams;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -107,11 +108,15 @@ public class SearchResource {
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
                            @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
-        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
+
+        try (MDC.MDCCloseable _ = MDC.putCloseable("query", query)) {
+            LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
+        }
+
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
                 // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
                 new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1))

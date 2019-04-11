@@ -32,6 +32,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -69,13 +70,16 @@ public class SuggestResource {
         }
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
         this.suggester = new SolrLaesekompasSuggester(this.solr);
-        LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
     private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
+        }
+
+        try (MDC.MDCCloseable _ = MDC.putCloseable("query", query)) {
+            LOGGER.info("/suggest/* performed with query: {}, type: {}", query, suggestType);
         }
 
         SuggestQueryResponse response = suggester.suggestQuery(query, suggestType);
