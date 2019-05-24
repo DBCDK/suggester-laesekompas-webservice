@@ -23,8 +23,11 @@ package dk.dbc.laesekompas.suggester.webservice;
 import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.annotation.Timed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -57,7 +60,7 @@ public class StatusBean {
     @Timed
     public Response getStatus() {
         try {
-            if (solr.ping().getStatus() != 200) {
+            if (solr.ping().getStatus() != 0) {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new Resp("SolR server not healthy...")).build();
             }
             return Response.ok().entity(new Resp()).build();
