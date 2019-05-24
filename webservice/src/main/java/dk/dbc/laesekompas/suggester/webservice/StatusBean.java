@@ -20,6 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 30/04/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -48,7 +49,7 @@ public class StatusBean {
         if(!this.suggesterSolrUrl.endsWith("/solr")) {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
-        this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
+        this.solr = new HttpSolrClient.Builder(suggesterSolrUrl+"/"+SuggestType.ALL.getCollection()).build();
     }
 
     @GET
