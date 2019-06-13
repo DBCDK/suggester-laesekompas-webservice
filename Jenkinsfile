@@ -30,12 +30,49 @@ pipeline {
 
                 }
 
-                sh """
-                    mvn -B clean
-                    mvn -B pmd:pmd javadoc:aggregate package                    
+                def status = sh returnStatus: true, script:  """
+                        rm -rf \$WORKSPACE/.repo
+                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo dependency:resolve dependency:resolve-plugins >/dev/null
+                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo clean
+                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo --fail-at-end org.jacoco:jacoco-maven-plugin:prepare-agent install -Dsurefire.useFile=false
+                    """
 
-                """
-                //junit "**/target/surefire-reports/TEST-*.xml,**/target/failsafe-reports/TEST-*.xml"
+                // We want code-coverage and pmd/findbugs even if unittests fails
+                status += sh returnStatus: true, script:  """
+                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo pmd:pmd pmd:cpd findbugs:findbugs javadoc:aggregate
+                    """
+
+                junit testResults: '**/target/*-reports/TEST-*.xml'
+
+                def java = scanForIssues tool: [$class: 'Java']
+                def javadoc = scanForIssues tool: [$class: 'JavaDoc']
+                publishIssues issues:[java, javadoc], unstableTotalAll:1
+
+                def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: '**/target/pmd.xml'
+                publishIssues issues:[pmd], unstableTotalAll:1
+
+                def cpd = scanForIssues tool: [$class: 'Cpd'], pattern: '**/target/cpd.xml'
+                publishIssues issues:[cpd]
+
+                def findbugs = scanForIssues tool: [$class: 'FindBugs'], pattern: '**/target/findbugsXml.xml'
+                publishIssues issues:[findbugs], unstableTotalAll:1
+
+                step([$class: 'JacocoPublisher',
+                      execPattern: 'target/*.exec,**/target/*.exec',
+                      classPattern: 'target/classes,**/target/classes',
+                      sourcePattern: 'src/main/java,**/src/main/java',
+                      exclusionPattern: 'src/test*,**/src/test*,**/*?Request.*,**/*?Response.*,**/*?Request$*,**/*?Response$*,**/*?DTO.*,**/*?DTO$*'
+                ])
+
+                warnings consoleParsers: [
+                        [parserName: "Java Compiler (javac)"],
+                        [parserName: "JavaDoc Tool"]],
+                        unstableTotalAll: "0",
+                        failedTotalAll: "0"
+
+                if ( status != 0 ) {
+                    currentBuild.result = Result.FAILURE
+                }
             }
         }
         
@@ -88,6 +125,11 @@ pipeline {
                 }
 
             }
+        }
+    }
+    post {
+        success {
+            step([$class: 'JavadocArchiver', javadocDir: 'target/site/apidocs', keepAll: false])
         }
     }
 }
