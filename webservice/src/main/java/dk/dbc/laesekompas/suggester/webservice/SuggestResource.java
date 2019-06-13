@@ -133,9 +133,9 @@ public class SuggestResource {
     /**
      * Gives suggestions for all book types
      * @param query query to give suggestions from
-     * @return
-     * @throws SolrServerException
-     * @throws IOException
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -146,9 +146,9 @@ public class SuggestResource {
     /**
      * Gives suggestions for only EBooks
      * @param query query to give suggestions from
-     * @return
-     * @throws SolrServerException
-     * @throws IOException
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
      */
     @GET
     @Path("/e_book")
@@ -160,9 +160,9 @@ public class SuggestResource {
     /**
      * Gives suggestions for only audio books
      * @param query query to give suggestions from
-     * @return
-     * @throws SolrServerException
-     * @throws IOException
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
      */
     @GET
     @Path("/audio_book")

@@ -122,8 +122,8 @@ public class SearchResource {
      * @param rows Number of result rows to be returned
      * @return List of search results, ranked by relevancy. With `field` and `exact` set, array will only contain
      * 1 element, as it serves as a lookup.
-     * @throws SolrServerException
-     * @throws IOException
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
