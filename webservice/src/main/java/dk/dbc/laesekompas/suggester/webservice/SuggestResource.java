@@ -55,10 +55,19 @@ public class SuggestResource {
     HttpSolrClient solr;
     SolrLaesekompasSuggester suggester;
 
+    /**
+     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     */
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String suggesterSolrUrl;
 
+    /**
+     * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
+     * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
+     * on the SolR.
+     */
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
     Integer maxNumberSuggestions;
@@ -77,10 +86,11 @@ public class SuggestResource {
         if (query == null) {
             return Response.status(400).build();
         }
+        MDC.put("requestType", "suggest");
+        MDC.put("query", query);
+        MDC.put("collection", suggestType.getCollection());
 
-        try (MDC.MDCCloseable _ = MDC.putCloseable("query", query)) {
-            LOGGER.info("/suggest/* performed with query: {}, type: {}", query, suggestType);
-        }
+        LOGGER.info("suggestion performed with query: {}, collectcion: {}", query, suggestType.toString());
 
         SuggestQueryResponse response = suggester.suggestQuery(query, suggestType);
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
@@ -113,15 +123,30 @@ public class SuggestResource {
         List<SuggestionEntity> suggestions = new ArrayList<>();
         duplicateRemover.forEach((k,s) -> suggestions.add(s));
 
+        MDC.clear();
         return Response.ok().entity(suggestions.subList(0, Integer.min(maxNumberSuggestions, suggestions.size()))).build();
     }
 
+    /**
+     * Gives suggestions for all book types
+     * @param query query to give suggestions from
+     * @return
+     * @throws SolrServerException
+     * @throws IOException
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
         return suggest(SuggestType.ALL, query);
     }
 
+    /**
+     * Gives suggestions for only EBooks
+     * @param query query to give suggestions from
+     * @return
+     * @throws SolrServerException
+     * @throws IOException
+     */
     @GET
     @Path("/e_book")
     @Produces(MediaType.APPLICATION_JSON)
@@ -129,6 +154,13 @@ public class SuggestResource {
         return suggest(SuggestType.E_BOOK, query);
     }
 
+    /**
+     * Gives suggestions for only audio books
+     * @param query query to give suggestions from
+     * @return
+     * @throws SolrServerException
+     * @throws IOException
+     */
     @GET
     @Path("/audio_book")
     @Produces(MediaType.APPLICATION_JSON)

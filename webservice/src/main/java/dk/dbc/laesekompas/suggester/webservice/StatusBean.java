@@ -20,15 +20,11 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 30/04/2019
  */
 
-import dk.dbc.laesekompas.suggester.webservice.solr.SuggestType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
-import org.apache.solr.common.SolrException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.annotation.Timed;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -42,6 +38,9 @@ import java.io.IOException;
 
 import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.*;
 
+/**
+ * Bean containing webservice status endpoint for monitoring purposes
+ */
 @Stateless
 @Path("status")
 public class StatusBean {
@@ -58,6 +57,11 @@ public class StatusBean {
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
     }
 
+    /**
+     * Status endpoint for monitoring, pings all SolR collections used for making search/suggest, if not all are healthy
+     * returns status code 500
+     * @return Response: json object {success: true/false, message: "Error message/success"}
+     */
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Timed

@@ -20,6 +20,9 @@ package dk.dbc.laesekompas.suggester.webservice.solr;
  * File created: 20/02/2019
  */
 
+/**
+ * Enum containing all the suggest SolR collections in use.
+ */
 public enum SuggestType {
     ALL("suggest-all"),
     E_BOOK("suggest-e_book"),

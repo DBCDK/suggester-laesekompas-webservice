@@ -58,10 +58,19 @@ public class SearchResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
     HttpSolrClient solr;
 
+    /**
+     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     */
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String searchSolrUrl;
 
+    /**
+     * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
+     * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
+     * on the SolR.
+     */
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
     Integer maxNumberSuggestions;
@@ -101,6 +110,21 @@ public class SearchResource {
             put(CommonParams.ROWS, Integer.toString(params.rows));
         }});
 
+    /**
+     * Performs a freeform user search on all the content of laesekompasset.
+     * @param query User query search
+     * @param field The document field to be queried, for example title/author etc. If empty, a general search is
+     *              performed across all relevant fields
+     * @param exact Whether or not the query should be an exact match, only works when `field` parameter is set to
+     *              either `author` or `title`.
+     * @param mergeWorkID Whether to merge documents on workID, so the same work does not get returned as both EBook,
+     *                    audio book and regular book. Picks A-posts, then books to represent the work.
+     * @param rows Number of result rows to be returned
+     * @return List of search results, ranked by relevancy. With `field` and `exact` set, array will only contain
+     * 1 element, as it serves as a lookup.
+     * @throws SolrServerException
+     * @throws IOException
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response search(@QueryParam("query") String query,
@@ -112,10 +136,14 @@ public class SearchResource {
         if (query == null) {
             return Response.status(400).build();
         }
+        MDC.put("requestType", "search");
+        MDC.put("query", query);
+        MDC.put("field", field);
+        MDC.put("exact", "" + exact);
+        MDC.put("merge_workid", "" + mergeWorkID);
+        MDC.put("rows", "" + rows);
 
-        try (MDC.MDCCloseable _ = MDC.putCloseable("query", query)) {
-            LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
-        }
+        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
 
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
                 // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
@@ -179,6 +207,7 @@ public class SearchResource {
                     .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
                     .collect(Collectors.toList());
         }
+        MDC.clear();
         // If mergeWorkId is set, but not all works has 3 manifestations, we could potentially have more than 'rows'
         // results, which is why we create the sublist. We might also have less than 'rows' results if the SolR search
         // did not return 'rows' results, which we must account for
