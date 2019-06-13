@@ -20,6 +20,8 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 25/03/2019
  */
 
+import java.util.Objects;
+
 public class SearchEntity {
     private String pid;
     private String workid;
@@ -29,6 +31,11 @@ public class SearchEntity {
     private int loans;
     private boolean aPost;
     private int order;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pid, workid, title, author, type, loans, aPost);
+    }
 
     public SearchEntity(
             String pid,

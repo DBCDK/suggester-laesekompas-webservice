@@ -215,7 +215,7 @@ public class SearchResource {
     }
 
     // POJO to pass 4 arguments to solr params function
-    private class SearchParams {
+    private static class SearchParams {
         String query;
         String field;
         boolean exact;

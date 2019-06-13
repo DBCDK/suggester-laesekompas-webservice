@@ -90,8 +90,8 @@ public class StatusBean {
 
     public static class Resp {
 
-        public boolean ok;
-        public String text;
+        boolean ok;
+        String text;
 
         public Resp() {
             ok = true;

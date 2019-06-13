@@ -20,8 +20,15 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 20/02/2019
  */
 
+import java.util.Objects;
+
 public class AuthorSuggestionEntity extends SuggestionEntity {
     private String authorName;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), authorName);
+    }
 
     public AuthorSuggestionEntity(String matchedTerm, long weight, String authorName) {
         super(matchedTerm, "AUTHOR", weight);

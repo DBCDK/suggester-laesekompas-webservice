@@ -117,6 +117,9 @@ public class SuggestResource {
                     TitleSuggestionEntity title = (TitleSuggestionEntity) suggestion;
                     duplicateRemover.putIfAbsent("pid:" + title.getPid(), title);
                     break;
+                default:
+                    break;
+
             }
         }
         // Convert to list, keeping order

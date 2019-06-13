@@ -20,6 +20,8 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 20/02/2019
  */
 
+import java.util.Objects;
+
 public class TagSuggestionEntity extends SuggestionEntity {
     private String tag;
     private Integer id;
@@ -54,6 +56,11 @@ public class TagSuggestionEntity extends SuggestionEntity {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tag, id, category);
     }
 
     @Override
