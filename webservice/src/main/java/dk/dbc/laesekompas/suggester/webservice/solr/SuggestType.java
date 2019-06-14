@@ -29,7 +29,7 @@ public enum SuggestType {
     AUDIO_BOOK("suggest-audio_book");
     private String collection;
 
-    private SuggestType(String collection) {
+    SuggestType(String collection) {
         this.collection = collection;
     }
 

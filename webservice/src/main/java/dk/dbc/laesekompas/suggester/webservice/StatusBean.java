@@ -20,6 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 30/04/2019
  */
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
@@ -90,7 +91,9 @@ public class StatusBean {
 
     public static class Resp {
 
+        @SuppressFBWarnings("URF_UNREAD_FIELD")
         boolean ok;
+        @SuppressFBWarnings("URF_UNREAD_FIELD")
         String text;
 
         public Resp() {

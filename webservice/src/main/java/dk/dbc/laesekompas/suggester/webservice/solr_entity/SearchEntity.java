@@ -65,13 +65,13 @@ public class SearchEntity {
             return false;
         }
         SearchEntity that = (SearchEntity) o;
-        return (this.pid.equals(that.pid)) &&
-                (this.type.equals(that.type)) &&
-                (this.workid.equals(that.workid)) &&
-                (this.title.equals(that.title)) &&
-                (this.author.equals(that.author)) &&
-                (this.aPost == that.aPost) &&
-                (this.loans == that.loans);
+        return this.pid.equals(that.pid) &&
+                this.type.equals(that.type) &&
+                this.workid.equals(that.workid) &&
+                this.title.equals(that.title) &&
+                this.author.equals(that.author) &&
+                this.aPost == that.aPost &&
+                this.loans == that.loans;
     }
 
     @Override

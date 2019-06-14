@@ -72,9 +72,9 @@ public class TagSuggestionEntity extends SuggestionEntity {
             return false;
         }
         TagSuggestionEntity that = (TagSuggestionEntity) o;
-        return (this.matchedTerm.equals(that.matchedTerm)) &&
-                (this.type.equals(that.type)) &&
-                (this.tag.equals(that.tag)) &&
-                (this.id.equals(that.id));
+        return this.matchedTerm.equals(that.matchedTerm) &&
+                this.type.equals(that.type) &&
+                this.tag.equals(that.tag) &&
+                this.id.equals(that.id);
     }
 }

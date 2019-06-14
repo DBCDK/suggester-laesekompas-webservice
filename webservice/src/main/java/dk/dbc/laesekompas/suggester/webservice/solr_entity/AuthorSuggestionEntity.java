@@ -52,8 +52,8 @@ public class AuthorSuggestionEntity extends SuggestionEntity {
             return false;
         }
         AuthorSuggestionEntity that = (AuthorSuggestionEntity) o;
-        return (this.matchedTerm.equals(that.matchedTerm)) &&
-                (this.type.equals(that.type)) &&
-                (this.authorName.equals(that.authorName));
+        return this.matchedTerm.equals(that.matchedTerm) &&
+                this.type.equals(that.type) &&
+                this.authorName.equals(that.authorName);
     }
 }

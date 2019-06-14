@@ -45,6 +45,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -193,12 +194,12 @@ public class SearchResource {
                     if (se1.getAPost() != se2.getAPost()) {
                         if(se1.getAPost()) return se1; else return se2;
                     } else if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
-                        return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
+                        return se1.getOrder() < se2.getOrder() ? se1 : se2;
                     } else if (se1.getType() == SearchEntityType.BOOK) return se1;
                     else if (se2.getType() == SearchEntityType.BOOK) return se2;
                     else {
                         // Order assignment is strictly increasing, which why they can never be equal
-                        return (se1.getOrder() < se2.getOrder()) ? se1 : se2;
+                        return se1.getOrder() < se2.getOrder() ? se1 : se2;
                     }
                 });
             }
@@ -215,7 +216,8 @@ public class SearchResource {
     }
 
     // POJO to pass 4 arguments to solr params function
-    private static class SearchParams {
+    private static class SearchParams implements Serializable {
+        private static final long serialVersionUID = -3844877980534226242L;
         String query;
         String field;
         boolean exact;

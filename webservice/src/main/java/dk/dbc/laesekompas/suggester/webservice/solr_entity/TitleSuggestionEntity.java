@@ -82,11 +82,11 @@ public class TitleSuggestionEntity extends SuggestionEntity {
             return false;
         }
         TitleSuggestionEntity that = (TitleSuggestionEntity) o;
-        return (this.matchedTerm.equals(that.matchedTerm)) &&
-                (this.type.equals(that.type)) &&
-                (this.title.equals(that.title)) &&
-                (this.authorName.equals(that.authorName)) &&
-                (this.pid.equals(that.pid)) &&
-                (this.workid.equals(that.workid));
+        return this.matchedTerm.equals(that.matchedTerm) &&
+                this.type.equals(that.type) &&
+                this.title.equals(that.title) &&
+                this.authorName.equals(that.authorName) &&
+                this.pid.equals(that.pid) &&
+                this.workid.equals(that.workid);
     }
 }
