@@ -91,10 +91,10 @@ public class StatusBean {
 
     public static class Resp {
 
-        @SuppressFBWarnings("URF_UNREAD_FIELD")
-        boolean ok;
-        @SuppressFBWarnings("URF_UNREAD_FIELD")
-        String text;
+        @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+        public boolean ok;
+        @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+        public String text;
 
         public Resp() {
             ok = true;
