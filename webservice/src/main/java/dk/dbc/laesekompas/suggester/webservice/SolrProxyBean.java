@@ -20,7 +20,6 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 18/06/2019
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,6 @@ import java.util.Map;
 @Stateless
 @Path("solr-proxy")
 public class SolrProxyBean {
-    private static final ObjectMapper O = new ObjectMapper();
     private static final Logger LOGGER = LoggerFactory.getLogger(SolrProxyBean.class);
     /**
      * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
