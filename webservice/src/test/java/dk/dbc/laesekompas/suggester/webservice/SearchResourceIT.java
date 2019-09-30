@@ -61,7 +61,7 @@ public class SearchResourceIT {
     public void searchQuery() throws IOException, SolrServerException {
         solrClient.add("search", test1);
         solrClient.commit("search");
-        Response response = searchResource.search("john", "", false, false, 10);
+        Response response = searchResource.search("john", "", false, false, 10, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
         assertEquals(result.size(), 1);
     }

@@ -108,6 +108,9 @@ public class SearchResource {
             put("defType", "dismax");
             put("qf", qf);
             put("bf", "log(loans)");
+            if (params.branchId != null) {
+                put("fq", "branch_id:\""+params.branchId+"\"");
+            }
             put(CommonParams.ROWS, Integer.toString(params.rows));
         }});
 
@@ -132,7 +135,8 @@ public class SearchResource {
                            @DefaultValue("") @QueryParam("field") String field,
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
-                           @DefaultValue("10") @QueryParam("rows") int rows) throws SolrServerException, IOException {
+                           @DefaultValue("10") @QueryParam("rows") int rows,
+                           @QueryParam("branch_id") String branchId) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
@@ -148,7 +152,7 @@ public class SearchResource {
 
         QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
                 // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-                new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1))
+                new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId)
         ));
 
         int i = 0;
@@ -222,12 +226,14 @@ public class SearchResource {
         String field;
         boolean exact;
         int rows;
+        String branchId;
 
-        SearchParams(String query, String field, boolean exact, int rows) {
+        SearchParams(String query, String field, boolean exact, int rows, String branchId) {
             this.query = query;
             this.field = field;
             this.exact = exact;
             this.rows = rows;
+            this.branchId = branchId;
         }
 
         @Override

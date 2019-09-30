@@ -54,6 +54,7 @@ public class SearchResourceTest {
         searchResource = new SearchResource();
 
         searchResource.searchSolrUrl = "http://invalid.invalid";
+        // Mocking basic test, shows results as given by SolR
         Mockito.when(test.getResults()).thenReturn(testDocs);
         Mockito.when(
                 solr.query(Mockito.eq("search"),
@@ -66,6 +67,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking test that rows parameter works
         Mockito.when(
                 solr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
@@ -77,6 +79,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking test of querying author field
         Mockito.when(
                 solr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
@@ -88,6 +91,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking test of querying author_exact field
         Mockito.when(
                 solr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
@@ -99,6 +103,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking test querying title field
         Mockito.when(
                 solr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
@@ -110,6 +115,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking test querying title_exact field
         Mockito.when(
                 solr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
@@ -121,6 +127,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
+        // Mocking testing merging on work IDs
         Mockito.when(testMergeWorkID.getResults()).thenReturn(testMergeWorkIDDocs);
         Mockito.when(
                 solr.query(Mockito.eq("search"),
@@ -133,6 +140,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(testMergeWorkID);
+        // Mocking test merging on work IDs when there are A-posts
         Mockito.when(testMergeWorkIDAPost.getResults()).thenReturn(testMergeWorkIDAPostDocs);
         Mockito.when(
                 solr.query(Mockito.eq("search"),
@@ -145,6 +153,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(testMergeWorkIDAPost);
+        // Mocking test that when merging on work IDs the correct number of rows show up
         Mockito.when(testMergeWorkIDNumRows.getResults()).thenReturn(testMergeWorkIDNumRowsDocs);
         Mockito.when(
                 solr.query(Mockito.eq("search"),
@@ -157,6 +166,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(testMergeWorkIDNumRows);
+        // Mocking test when merging on work IDs when SolR cannot return enough
         Mockito.when(testMergeWorkIDFewRows.getResults()).thenReturn(testMergeWorkIDFewRowsDocs);
         Mockito.when(
                 solr.query(Mockito.eq("search"),
@@ -169,13 +179,27 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(testMergeWorkIDFewRows);
+        // Mocking branch_id filter test
+        Mockito.when(test.getResults()).thenReturn(testDocs);
+        Mockito.when(
+                solr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "filter on branch");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("fq", "branch_id:\"b1\"");
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "10");
+                        }})))
+                )
+        ).thenReturn(test);
         searchResource.solr = solr;
         searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
 
     @Test
     public void getSearchReturnsResults() throws IOException, SolrServerException {
-        Response response = searchResource.search("john", "", false, false, 10);
+        Response response = searchResource.search("john", "", false, false, 10, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
@@ -185,36 +209,36 @@ public class SearchResourceTest {
     @Test
     public void fieldQueryParamAuthorProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field", "author", false, false, 10);
+        searchResource.search("author_field", "author", false, false, 10, null);
     }
 
     @Test
     public void fieldQueryParamAuthorExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field_exact", "author", true, false, 10);
+        searchResource.search("author_field_exact", "author", true, false, 10, null);
     }
 
     @Test
     public void fieldQueryParamTitleProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field", "title", false, false, 10);
+        searchResource.search("title_field", "title", false, false, 10, null);
     }
 
     @Test
     public void fieldQueryParamTitleExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field_exact", "title", true, false, 10);
+        searchResource.search("title_field_exact", "title", true, false, 10, null);
     }
 
     @Test
     public void rowsProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("rows", "", false, false, 20);
+        searchResource.search("rows", "", false, false, 20, null);
     }
 
     @Test
     public void mergeWorkIDParam() throws IOException, SolrServerException {
-        Response response = searchResource.search("merge", "", false, true, 10);
+        Response response = searchResource.search("merge", "", false, true, 10, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkID1, testMergeWorkID2, testMergeWorkID3);
@@ -224,7 +248,7 @@ public class SearchResourceTest {
     @Test
     public void mergeReturnAtMostRequestedNumRows() throws IOException, SolrServerException {
         int rows = 2;
-        Response response = searchResource.search("merge #rows", "", false, true, rows);
+        Response response = searchResource.search("merge #rows", "", false, true, rows, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         assertEquals(result.size(), rows);
@@ -233,7 +257,7 @@ public class SearchResourceTest {
     @Test
     public void mergeDontFailOnFewResults() throws IOException, SolrServerException {
         int rows = 5;
-        Response response = searchResource.search("merge #rows few", "", false, true, rows);
+        Response response = searchResource.search("merge #rows few", "", false, true, rows, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         // Test that the test is essentially testing what it is supposed to
@@ -243,10 +267,19 @@ public class SearchResourceTest {
 
     @Test
     public void mergeWorkIdPrioritizeAPost() throws IOException, SolrServerException {
-        Response response = searchResource.search("merge a-post", "", false, true, 10);
+        Response response = searchResource.search("merge a-post", "", false, true, 10, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkIDAPost1, testMergeWorkIDAPost2);
+        assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
+    }
+
+    @Test
+    public void filterBranchId() throws IOException, SolrServerException {
+        Response response = searchResource.search("filter on branch", "", false, false, 10, "b1");
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
