@@ -124,6 +124,7 @@ public class SearchResource {
      * @param mergeWorkID Whether to merge documents on workID, so the same work does not get returned as both EBook,
      *                    audio book and regular book. Picks A-posts, then books to represent the work.
      * @param rows Number of result rows to be returned
+     * @param branchId the branch id the result should filter on, if not given no filtering is applied
      * @return List of search results, ranked by relevancy. With `field` and `exact` set, array will only contain
      * 1 element, as it serves as a lookup.
      * @throws SolrServerException Thrown if the SolR client throws any exceptions
