@@ -20,8 +20,12 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
+import dk.dbc.holdingsitems.HoldingsItemsDAO;
+import dk.dbc.holdingsitems.HoldingsItemsException;
+import dk.dbc.holdingsitems.jpa.Status;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
+import javafx.util.Pair;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -37,11 +41,8 @@ import org.slf4j.MDC;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.persistence.EntityManager;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -75,6 +76,12 @@ public class SearchResource {
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
     Integer maxNumberSuggestions;
+
+    @Inject
+    EntityManager entityManager;
+
+    @Inject
+    HoldingsItemsDAO holdingsItemsDAO;
 
     @PostConstruct
     public void initialize() {
@@ -137,6 +144,7 @@ public class SearchResource {
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
                            @DefaultValue("10") @QueryParam("rows") int rows,
+                           @DefaultValue("false") @QueryParam("filter_status") boolean filterStatusOnShelf,
                            @QueryParam("branch_id") String branchId) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
@@ -151,43 +159,76 @@ public class SearchResource {
 
         LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
 
-        QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
-                // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-                new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId)
-        ));
-
-        int i = 0;
+        int order = 0;
+        int index = 0;
+        boolean atEnd = false;
         List<SearchEntity> searchResults = new ArrayList<>();
-        for (SolrDocument doc : solrResponse.getResults()) {
-            SearchEntityType type;
-            String docType = (String)doc.get("type");
-            switch (docType){
-                case "Bog":
-                    type = SearchEntityType.BOOK;
-                    break;
-                case "Ebog":
-                    type = SearchEntityType.E_BOOK;
-                    break;
-                case "Lydbog (net)":
-                    type = SearchEntityType.AUDIO_BOOK;
-                    break;
-                default:
-                    // Even though SolR is being wierd in this case, we do not fail
-                    LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
-                    type = SearchEntityType.BOOK;
-                    break;
+        while (searchResults.size() < rows && !atEnd) {
+            QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
+                    // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
+                    new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, index)
+            ));
+
+            atEnd = ((index+rows) >= (solrResponse.getResults().getNumFound()));
+
+            ArrayList<SearchEntity> buffer = new ArrayList<>();
+            for (SolrDocument doc : solrResponse.getResults()) {
+                SearchEntityType type;
+                String docType = (String)doc.get("type");
+                switch (docType){
+                    case "Bog":
+                        type = SearchEntityType.BOOK;
+                        break;
+                    case "Ebog":
+                        type = SearchEntityType.E_BOOK;
+                        break;
+                    case "Lydbog (net)":
+                        type = SearchEntityType.AUDIO_BOOK;
+                        break;
+                    default:
+                        // Even though SolR is being wierd in this case, we do not fail
+                        LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
+                        type = SearchEntityType.BOOK;
+                        break;
+                }
+                buffer.add(new SearchEntity(
+                        (String)doc.get("pid"),
+                        (String)doc.get("workid"),
+                        (String)doc.get("title"),
+                        (String)doc.get("author"),
+                        type,
+                        (int)doc.get("loans"),
+                        (boolean)doc.get("a_post"),
+                        order,
+                        (ArrayList<String>) doc.get("bibliographic_record_id"))
+                );
+                order += 1;
             }
-            searchResults.add(new SearchEntity(
-                    (String)doc.get("pid"),
-                    (String)doc.get("workid"),
-                    (String)doc.get("title"),
-                    (String)doc.get("author"),
-                    type,
-                    (int)doc.get("loans"),
-                    (boolean)doc.get("a_post"),
-                    i)
-            );
-            i += 1;
+
+            // Find holdings items status for each result
+            if (filterStatusOnShelf) {
+                buffer.stream()
+                        //.flatMap(searchEntity -> {
+                        //    String agencyId = searchEntity.getPid().substring(0, 6);
+                        //    return searchEntity.getBibIdsInWork().stream().map(bibId -> new Pair<>(agencyId, bibId));
+                        //})
+                        .filter(searchEntity -> {
+                            int agencyId = Integer.parseInt(searchEntity.getPid().substring(0, 6));
+                            return searchEntity.getBibIdsInWork().stream()
+                                    .map(bibId -> {
+                                        try {
+                                            return holdingsItemsDAO.getStatusFor(bibId, agencyId).get(Status.ON_SHELF) > 0;
+                                        } catch (HoldingsItemsException e) {
+                                            throw new RuntimeException("HoldingsItemsException: {}", e);
+                                        }
+                                    })
+                                    // Only one of the bibliographic items needs to be `OnShelf` ie. is true
+                                    .reduce(false, Boolean::logicalOr);
+                        })
+                        .collect(Collectors.toList());
+            }
+            searchResults.addAll(buffer);
+            index += rows;
         }
         if (mergeWorkID) {
             HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
@@ -228,13 +269,15 @@ public class SearchResource {
         boolean exact;
         int rows;
         String branchId;
+        int start;
 
-        SearchParams(String query, String field, boolean exact, int rows, String branchId) {
+        SearchParams(String query, String field, boolean exact, int rows, String branchId, int start) {
             this.query = query;
             this.field = field;
             this.exact = exact;
             this.rows = rows;
             this.branchId = branchId;
+            this.start = start;
         }
 
         @Override

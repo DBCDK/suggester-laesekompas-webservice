@@ -20,6 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 25/03/2019
  */
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class SearchEntity {
@@ -31,10 +32,11 @@ public class SearchEntity {
     private int loans;
     private boolean aPost;
     private int order;
+    private ArrayList<String> bibIdsInWork;
 
     @Override
     public int hashCode() {
-        return Objects.hash(pid, workid, title, author, type, loans, aPost);
+        return Objects.hash(pid, workid, title, author, type, loans, aPost, bibIdsInWork);
     }
 
     public SearchEntity(
@@ -45,7 +47,8 @@ public class SearchEntity {
             SearchEntityType type,
             int loans,
             boolean aPost,
-            int order) {
+            int order,
+            ArrayList<String> bibIdsInWork) {
         this.pid = pid;
         this.workid = workid;
         this.title = title;
@@ -54,6 +57,7 @@ public class SearchEntity {
         this.loans = loans;
         this.aPost = aPost;
         this.order = order;
+        this.bibIdsInWork = bibIdsInWork;
     }
 
     @Override
@@ -141,5 +145,13 @@ public class SearchEntity {
 
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public ArrayList<String> getBibIdsInWork() {
+        return bibIdsInWork;
+    }
+
+    public void setBibIdsInWork(ArrayList<String> bibIdsInWork) {
+        this.bibIdsInWork = bibIdsInWork;
     }
 }

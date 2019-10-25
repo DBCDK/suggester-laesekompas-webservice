@@ -38,9 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -199,7 +197,7 @@ public class SearchResourceTest {
 
     @Test
     public void getSearchReturnsResults() throws IOException, SolrServerException {
-        Response response = searchResource.search("john", "", false, false, 10, null);
+        Response response = searchResource.search("john", "", false, false, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
@@ -209,36 +207,36 @@ public class SearchResourceTest {
     @Test
     public void fieldQueryParamAuthorProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field", "author", false, false, 10, null);
+        searchResource.search("author_field", "author", false, false, 10, false, null);
     }
 
     @Test
     public void fieldQueryParamAuthorExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("author_field_exact", "author", true, false, 10, null);
+        searchResource.search("author_field_exact", "author", true, false, 10, false, null);
     }
 
     @Test
     public void fieldQueryParamTitleProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field", "title", false, false, 10, null);
+        searchResource.search("title_field", "title", false, false, 10, false, null);
     }
 
     @Test
     public void fieldQueryParamTitleExactProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("title_field_exact", "title", true, false, 10, null);
+        searchResource.search("title_field_exact", "title", true, false, 10, false, null);
     }
 
     @Test
     public void rowsProperSolRParam() throws IOException, SolrServerException {
         // If proper SolrParams are not generated, result will not be mocked, and search throws exception
-        searchResource.search("rows", "", false, false, 20, null);
+        searchResource.search("rows", "", false, false, 20, false, null);
     }
 
     @Test
     public void mergeWorkIDParam() throws IOException, SolrServerException {
-        Response response = searchResource.search("merge", "", false, true, 10, null);
+        Response response = searchResource.search("merge", "", false, true, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkID1, testMergeWorkID2, testMergeWorkID3);
@@ -248,7 +246,7 @@ public class SearchResourceTest {
     @Test
     public void mergeReturnAtMostRequestedNumRows() throws IOException, SolrServerException {
         int rows = 2;
-        Response response = searchResource.search("merge #rows", "", false, true, rows, null);
+        Response response = searchResource.search("merge #rows", "", false, true, rows, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         assertEquals(result.size(), rows);
@@ -257,7 +255,7 @@ public class SearchResourceTest {
     @Test
     public void mergeDontFailOnFewResults() throws IOException, SolrServerException {
         int rows = 5;
-        Response response = searchResource.search("merge #rows few", "", false, true, rows, null);
+        Response response = searchResource.search("merge #rows few", "", false, true, rows, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         // Test that the test is essentially testing what it is supposed to
@@ -267,7 +265,7 @@ public class SearchResourceTest {
 
     @Test
     public void mergeWorkIdPrioritizeAPost() throws IOException, SolrServerException {
-        Response response = searchResource.search("merge a-post", "", false, true, 10, null);
+        Response response = searchResource.search("merge a-post", "", false, true, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkIDAPost1, testMergeWorkIDAPost2);
@@ -276,7 +274,7 @@ public class SearchResourceTest {
 
     @Test
     public void filterBranchId() throws IOException, SolrServerException {
-        Response response = searchResource.search("filter on branch", "", false, false, 10, "b1");
+        Response response = searchResource.search("filter on branch", "", false, false, 10, false, "b1");
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
@@ -302,7 +300,10 @@ public class SearchResourceTest {
             SearchEntityType.BOOK,
             1,
             false,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("63");
+            }}
     );
     private static final SolrDocumentList testDocs = new SolrDocumentList() {{
        add(testDoc1);
@@ -362,7 +363,10 @@ public class SearchResourceTest {
             SearchEntityType.BOOK,
             1,
             false,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("2");
+            }}
     );
     // Test that a non-book can be included, if no books can be picked (testMergeWorkIDDoc3)
     private static final SearchEntity testMergeWorkID2 = new SearchEntity("pid:3",
@@ -372,7 +376,10 @@ public class SearchResourceTest {
             SearchEntityType.AUDIO_BOOK,
             1,
             false,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("3");
+            }}
     );
     // Test that if no book can be picked, pick the highest ranked manifestation regardless if it is
     // a audio book or E book (testMergeWorkIDDoc4)
@@ -383,7 +390,10 @@ public class SearchResourceTest {
             SearchEntityType.AUDIO_BOOK,
             1,
             false,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("4");
+            }}
     );
     private static final SolrDocumentList testMergeWorkIDDocs = new SolrDocumentList() {{
         add(testMergeWorkIDDoc1);
@@ -439,7 +449,10 @@ public class SearchResourceTest {
             SearchEntityType.E_BOOK,
             1,
             true,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("1");
+            }}
     );
     // Test that if A-post is ranked lower in the work, it is still picked (testMergeWorkIDDoc4)
     private static final SearchEntity testMergeWorkIDAPost2 = new SearchEntity("pid:4",
@@ -449,7 +462,10 @@ public class SearchResourceTest {
             SearchEntityType.AUDIO_BOOK,
             1,
             true,
-            0
+            0,
+            new ArrayList<String>() {{
+                add("4");
+            }}
     );
     private static final SolrDocumentList testMergeWorkIDAPostDocs = new SolrDocumentList() {{
         add(testMergeWorkIDAPostDoc1);

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -61,7 +62,7 @@ public class SearchResourceIT {
     public void searchQuery() throws IOException, SolrServerException {
         solrClient.add("search", test1);
         solrClient.commit("search");
-        Response response = searchResource.search("john", "", false, false, 10, null);
+        Response response = searchResource.search("john", "", false, false, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
         assertEquals(result.size(), 1);
     }
