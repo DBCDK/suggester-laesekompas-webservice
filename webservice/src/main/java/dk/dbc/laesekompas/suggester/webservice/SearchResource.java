@@ -25,7 +25,6 @@ import dk.dbc.holdingsitems.HoldingsItemsException;
 import dk.dbc.holdingsitems.jpa.Status;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
-import javafx.util.Pair;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -171,7 +170,7 @@ public class SearchResource {
                     new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, index)
             ));
 
-            atEnd = ((index+rows) >= (solrResponse.getResults().getNumFound()));
+            atEnd = (index+rows) >= (solrResponse.getResults().getNumFound());
 
             ArrayList<SearchEntity> buffer = new ArrayList<>();
             for (SolrDocument doc : solrResponse.getResults()) {
