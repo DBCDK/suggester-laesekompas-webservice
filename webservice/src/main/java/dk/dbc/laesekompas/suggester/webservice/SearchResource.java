@@ -77,9 +77,6 @@ public class SearchResource {
     Integer maxNumberSuggestions;
 
     @Inject
-    EntityManager entityManager;
-
-    @Inject
     HoldingsItemsDAO holdingsItemsDAO;
 
     @PostConstruct
