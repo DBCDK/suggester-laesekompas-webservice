@@ -132,6 +132,8 @@ public class SearchResource {
      *                    audio book and regular book. Picks A-posts, then books to represent the work.
      * @param rows Number of result rows to be returned
      * @param branchId the branch id the result should filter on, if not given no filtering is applied
+     * @param filterStatusOnShelf Whether materials should be filtered based on if the branch specified in branchId
+     *                            parameter has them OnShelf
      * @return List of search results, ranked by relevancy. With `field` and `exact` set, array will only contain
      * 1 element, as it serves as a lookup.
      * @throws SolrServerException Thrown if the SolR client throws any exceptions
