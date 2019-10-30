@@ -233,9 +233,9 @@ public class SearchResource {
             List<SearchEntity> filtered_buffer;
             // Filter based on holdings items status for each result
             if (branchId != null && filterStatusOnShelf) {
+                String agencyId = branchId.substring(0, 6);
                 filtered_buffer = buffer.stream()
                         .filter(searchEntity -> {
-                            String agencyId = searchEntity.getPid().substring(0, 6);
                             // Checks if any of the items in the work have an OnShelf status
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
