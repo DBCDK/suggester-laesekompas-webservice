@@ -103,11 +103,6 @@
       <version>1.10.19</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>holdings-items-access</artifactId>
-      <version>1.2-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
   <build>
@@ -206,6 +201,7 @@
         <configuration>
           <systemPropertyVariables>
             <suggester.solr.url>http://${docker.host.address}:${suggest.solr.host.port}/solr</suggester.solr.url>
+            <corepo.solr.url>http://cisterne-solr.dbc.dk:8986/solr</corepo.solr.url>
           </systemPropertyVariables>
         </configuration>
       </plugin>

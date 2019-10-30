@@ -20,9 +20,6 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 20/02/2019
  */
 
-import dk.dbc.holdingsitems.HoldingsItemsDAO;
-import dk.dbc.holdingsitems.HoldingsItemsException;
-import dk.dbc.holdingsitems.jpa.Status;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -48,6 +45,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,7 +54,8 @@ import java.util.stream.Collectors;
 public class SearchResource {
     public static final String SOLR_FULL_TEXT_QUERY = "author^6.0 title^5.0 all abstract";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
-    HttpSolrClient solr;
+    HttpSolrClient laesekompasSolr;
+    HttpSolrClient corepoSolr;
 
     /**
      * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
@@ -67,6 +66,14 @@ public class SearchResource {
     String searchSolrUrl;
 
     /**
+     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     */
+    @Inject
+    @ConfigProperty(name = "COREPO_SOLR_URL")
+    String corepoSolrUrl;
+
+    /**
      * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
      * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
      * on the SolR.
@@ -75,15 +82,21 @@ public class SearchResource {
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
     Integer maxNumberSuggestions;
 
-    @Inject
-    HoldingsItemsDAO holdingsItemsDAO;
-
     @PostConstruct
     public void initialize() {
         if(!this.searchSolrUrl.endsWith("/solr")) {
             this.searchSolrUrl = this.searchSolrUrl +"/solr";
         }
-        this.solr = new HttpSolrClient.Builder(searchSolrUrl).build();
+        LOGGER.info("config/laesekompas SolR URL: {}", searchSolrUrl);
+        this.laesekompasSolr = new HttpSolrClient.Builder(searchSolrUrl).build();
+        if(!this.corepoSolrUrl.endsWith("/solr")) {
+            this.corepoSolrUrl = this.corepoSolrUrl +"/solr";
+        }
+        // Appending alias for our specific application
+        this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
+        LOGGER.info("config/corepo SolR URL: {}", searchSolrUrl);
+        this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
+        LOGGER.info("config/laesekompas SolR URL: {}", maxNumberSuggestions);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
@@ -115,6 +128,13 @@ public class SearchResource {
             }
             put(CommonParams.ROWS, Integer.toString(params.rows));
         }});
+
+    private static final BiFunction<String, String, SolrParams> onShelfLookupParams = (agencyId, bibId) -> new MapSolrParams(new HashMap<String, String>() {{
+        String query = String.format("holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf", agencyId, bibId);
+        LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
+        put(CommonParams.Q, query);
+        put(CommonParams.ROWS, "0");
+    }});
 
     /**
      * Performs a freeform user search on all the content of laesekompasset.
@@ -161,7 +181,7 @@ public class SearchResource {
         boolean atEnd = false;
         List<SearchEntity> searchResults = new ArrayList<>();
         while (searchResults.size() < rows && !atEnd) {
-            QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
+            QueryResponse solrResponse = laesekompasSolr.query("search", solrSearchParams.apply(
                     // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
                     new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, index)
             ));
@@ -205,18 +225,18 @@ public class SearchResource {
             // Find holdings items status for each result
             if (filterStatusOnShelf) {
                 buffer.stream()
-                        //.flatMap(searchEntity -> {
-                        //    String agencyId = searchEntity.getPid().substring(0, 6);
-                        //    return searchEntity.getBibIdsInWork().stream().map(bibId -> new Pair<>(agencyId, bibId));
-                        //})
                         .filter(searchEntity -> {
-                            int agencyId = Integer.parseInt(searchEntity.getPid().substring(0, 6));
+                            String agencyId = searchEntity.getPid().substring(0, 6);
+                            // Do any of the items in the work have an OnShelf value?
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
-                                            return holdingsItemsDAO.getStatusFor(bibId, agencyId).get(Status.ON_SHELF) > 0;
-                                        } catch (HoldingsItemsException e) {
-                                            throw new RuntimeException("HoldingsItemsException: {}", e);
+                                            QueryResponse response = corepoSolr.query(onShelfLookupParams.apply(agencyId, bibId));
+                                            return response.getResults().getNumFound() > 1;
+                                        } catch (IOException | SolrServerException e) {
+                                            LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
+                                            LOGGER.error("{}", e);
+                                            throw new RuntimeException("Failed talking to corepo SolR");
                                         }
                                     })
                                     // Only one of the bibliographic items needs to be `OnShelf` ie. is true

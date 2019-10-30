@@ -1,9 +1,3 @@
 {
-    "appName": "suggester-laesekompas-webservice",
-    "jdbc": {
-        "jdbc/holdings-items": {
-            "url": "${HOLDINGS_ITEMS_POSTGRES_URL}",
-            "maxSize": "${MAX_POOL_SIZE}"
-        }
-    }
+    "appName": "suggester-laesekompas-webservice"
 }

@@ -191,7 +191,7 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(test);
-        searchResource.solr = solr;
+        searchResource.laesekompasSolr = solr;
         searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
 

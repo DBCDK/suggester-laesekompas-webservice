@@ -4,7 +4,7 @@ ENV MAX_POOL_SIZE=3
 
 LABEL SUGGESTER_SOLR_URL="Suggester SolR url (required)" \
       MAX_NUMBER_SUGGESTIONS="The maximum number of suggestions returned (default: 10)" \
-      HOLDINGS_ITEMS_POSTGRES_URL="Url pointing at holdings items postgres (required). Ex.: 'user:pass@host:1234/dbname'" \
+      COREPO_SOLR_URL="Corepo SolR url (required)" \
       MAX_POOL_SIZE="JDBC connection pool parameter (optional, default is 3)"
 
 ENV JAVA_MAX_HEAP_SIZE=2g

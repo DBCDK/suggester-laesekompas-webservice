@@ -46,14 +46,17 @@ public class SearchResourceIT {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
-        String solrUrl = System.getProperty("suggester.solr.url");
+        String laesekompasSolRUrl = System.getProperty("suggester.solr.url");
+        String corepoSolrUrl = System.getProperty("corepo.solr.url");
 
-        searchResource.searchSolrUrl = solrUrl;
+        searchResource.searchSolrUrl = laesekompasSolRUrl;
+        searchResource.corepoSolrUrl = corepoSolrUrl;
         log.info("We have the SolR suggester URL: {}", searchResource.searchSolrUrl);
+        log.info("We have the Corepo suggester URL: {}", searchResource.corepoSolrUrl);
         searchResource.maxNumberSuggestions = 10;
         searchResource.initialize();
 
-        solrClient = new HttpSolrClient.Builder(solrUrl).build();
+        solrClient = new HttpSolrClient.Builder(laesekompasSolRUrl).build();
         solrClient.deleteByQuery("search", "*:*");
         solrClient.commit("search");
     }
