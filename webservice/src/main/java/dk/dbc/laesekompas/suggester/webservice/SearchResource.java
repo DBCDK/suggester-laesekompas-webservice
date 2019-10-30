@@ -173,22 +173,30 @@ public class SearchResource {
         MDC.put("exact", "" + exact);
         MDC.put("merge_workid", "" + mergeWorkID);
         MDC.put("rows", "" + rows);
+        MDC.put("filter_status", "" + filterStatusOnShelf);
+        MDC.put("branch_id", branchId);
 
-        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
+        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}, branch_id: {}, filter_status: {}",
+                query, field, exact, mergeWorkID, rows, branchId, filterStatusOnShelf);
 
+        // Order of which search results where retrieved
         int order = 0;
-        int index = 0;
-        boolean atEnd = false;
+        // Index of SolR responses
+        int solrSearchIndex = 0;
+        boolean solrSearchResultEnd = false;
         List<SearchEntity> searchResults = new ArrayList<>();
-        while (searchResults.size() < rows && !atEnd) {
+        // We loop because filterStatusOnShelf might filter out results
+        while (searchResults.size() < rows && !solrSearchResultEnd) {
             QueryResponse solrResponse = laesekompasSolr.query("search", solrSearchParams.apply(
                     // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-                    new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, index)
+                    new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex)
             ));
 
-            atEnd = (index+rows) >= (solrResponse.getResults().getNumFound());
+            // If we have paged past the number of total results in SolR, we are at the end
+            solrSearchResultEnd = (solrSearchIndex+rows) >= (solrResponse.getResults().getNumFound());
 
             ArrayList<SearchEntity> buffer = new ArrayList<>();
+            // Converting search results to SearchEntity
             for (SolrDocument doc : solrResponse.getResults()) {
                 SearchEntityType type;
                 String docType = (String)doc.get("type");
@@ -203,7 +211,7 @@ public class SearchResource {
                         type = SearchEntityType.AUDIO_BOOK;
                         break;
                     default:
-                        // Even though SolR is being wierd in this case, we do not fail
+                        // Even though SolR is being weird in this case, we do not fail
                         LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
                         type = SearchEntityType.BOOK;
                         break;
@@ -222,12 +230,13 @@ public class SearchResource {
                 order += 1;
             }
 
-            // Find holdings items status for each result
-            if (filterStatusOnShelf) {
-                buffer.stream()
+            List<SearchEntity> filtered_buffer;
+            // Filter based on holdings items status for each result
+            if (branchId != null && filterStatusOnShelf) {
+                filtered_buffer = buffer.stream()
                         .filter(searchEntity -> {
                             String agencyId = searchEntity.getPid().substring(0, 6);
-                            // Do any of the items in the work have an OnShelf value?
+                            // Checks if any of the items in the work have an OnShelf status
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
@@ -243,10 +252,13 @@ public class SearchResource {
                                     .reduce(false, Boolean::logicalOr);
                         })
                         .collect(Collectors.toList());
+            } else {
+                filtered_buffer = buffer;
             }
-            searchResults.addAll(buffer);
-            index += rows;
+            searchResults.addAll(filtered_buffer);
+            solrSearchIndex += rows;
         }
+        // If true, returns 1 material per workID
         if (mergeWorkID) {
             HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
             for (SearchEntity searchEntity : searchResults) {
