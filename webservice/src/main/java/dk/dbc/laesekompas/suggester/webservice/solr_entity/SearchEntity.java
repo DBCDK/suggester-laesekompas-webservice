@@ -20,7 +20,6 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 25/03/2019
  */
 
-import dk.dbc.laesekompas.suggester.webservice.SearchResource;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.slf4j.Logger;
