@@ -264,6 +264,7 @@ public class SearchResourceTest {
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testMergeWorkID1, testMergeWorkID2, testMergeWorkID3);
+        System.out.println(result);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -393,7 +394,7 @@ public class SearchResourceTest {
         addField("type","Lydbog (net)");
         addField("loans",1);
         addField("bibliographic_record_id",new ArrayList<String>() {{
-            add("3");
+            add("4");
         }});
         addField("a_post",false);
     }};
@@ -405,7 +406,7 @@ public class SearchResourceTest {
         addField("type","Ebog");
         addField("loans",1);
         addField("bibliographic_record_id",new ArrayList<String>() {{
-            add("4");
+            add("5");
         }});
         addField("a_post",false);
     }};
@@ -430,7 +431,7 @@ public class SearchResourceTest {
             SearchEntityType.AUDIO_BOOK,
             1,
             false,
-            0,
+            1,
             new ArrayList<String>() {{
                 add("3");
             }}
@@ -444,7 +445,7 @@ public class SearchResourceTest {
             SearchEntityType.AUDIO_BOOK,
             1,
             false,
-            0,
+            2,
             new ArrayList<String>() {{
                 add("4");
             }}
