@@ -20,10 +20,17 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 25/03/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.SearchResource;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class SearchEntity {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchEntity.class);
     private String pid;
     private String workid;
     private String title;
@@ -74,13 +81,14 @@ public class SearchEntity {
                 this.workid.equals(that.workid) &&
                 this.title.equals(that.title) &&
                 this.author.equals(that.author) &&
+                this.bibIdsInWork.equals(that.bibIdsInWork) &&
                 this.aPost == that.aPost &&
                 this.loans == that.loans;
     }
 
     @Override
     public String toString() {
-        return "{pid=\""+pid+"\""+", type="+type+", workid="+workid+", title="+title+"}";
+        return "{pid=\""+pid+"\""+", type="+type+", workid="+workid+", title="+title+", bibInWork: "+bibIdsInWork+"}";
     }
 
     public String getPid() {
@@ -153,5 +161,43 @@ public class SearchEntity {
 
     public void setBibIdsInWork(ArrayList<String> bibIdsInWork) {
         this.bibIdsInWork = bibIdsInWork;
+    }
+
+    public static ArrayList<SearchEntity> searchResultsIntoSearchEntities(SolrDocumentList docs, Integer order) {
+        ArrayList<SearchEntity> buffer = new ArrayList<>();
+        // Converting search results to SearchEntity
+        for (SolrDocument doc : docs) {
+            SearchEntityType type;
+            String docType = (String)doc.get("type");
+            switch (docType){
+                case "Bog":
+                    type = SearchEntityType.BOOK;
+                    break;
+                case "Ebog":
+                    type = SearchEntityType.E_BOOK;
+                    break;
+                case "Lydbog (net)":
+                    type = SearchEntityType.AUDIO_BOOK;
+                    break;
+                default:
+                    // Even though SolR is being weird in this case, we do not fail
+                    LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
+                    type = SearchEntityType.BOOK;
+                    break;
+            }
+            buffer.add(new SearchEntity(
+                    (String)doc.get("pid"),
+                    (String)doc.get("workid"),
+                    (String)doc.get("title"),
+                    (String)doc.get("author"),
+                    type,
+                    (int)doc.get("loans"),
+                    (boolean)doc.get("a_post"),
+                    order,
+                    (ArrayList<String>) doc.get("bibliographic_record_id"))
+            );
+            order += 1;
+        }
+        return buffer;
     }
 }

@@ -52,10 +52,11 @@ public class SearchResourceTest {
         searchResource = new SearchResource();
 
         searchResource.searchSolrUrl = "http://invalid.invalid";
+        searchResource.corepoSolrUrl = "http://invalid2.invalid";
         // Mocking basic test, shows results as given by SolR
-        Mockito.when(test.getResults()).thenReturn(testDocs);
+        Mockito.when(testLaesekompasSolrResponse.getResults()).thenReturn(testDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "john");
                             put("defType", "dismax");
@@ -64,10 +65,10 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking test that rows parameter works
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "rows");
                             put("defType", "dismax");
@@ -76,10 +77,10 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "20");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking test of querying author field
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "author_field");
                             put("defType", "dismax");
@@ -88,10 +89,10 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking test of querying author_exact field
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "author_field_exact");
                             put("defType", "dismax");
@@ -100,10 +101,10 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking test querying title field
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "title_field");
                             put("defType", "dismax");
@@ -112,10 +113,10 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking test querying title_exact field
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "title_field_exact");
                             put("defType", "dismax");
@@ -124,11 +125,11 @@ public class SearchResourceTest {
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
+        ).thenReturn(testLaesekompasSolrResponse);
         // Mocking testing merging on work IDs
         Mockito.when(testMergeWorkID.getResults()).thenReturn(testMergeWorkIDDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "merge");
                             put("defType", "dismax");
@@ -141,7 +142,7 @@ public class SearchResourceTest {
         // Mocking test merging on work IDs when there are A-posts
         Mockito.when(testMergeWorkIDAPost.getResults()).thenReturn(testMergeWorkIDAPostDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "merge a-post");
                             put("defType", "dismax");
@@ -154,7 +155,7 @@ public class SearchResourceTest {
         // Mocking test that when merging on work IDs the correct number of rows show up
         Mockito.when(testMergeWorkIDNumRows.getResults()).thenReturn(testMergeWorkIDNumRowsDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "merge #rows");
                             put("defType", "dismax");
@@ -167,7 +168,7 @@ public class SearchResourceTest {
         // Mocking test when merging on work IDs when SolR cannot return enough
         Mockito.when(testMergeWorkIDFewRows.getResults()).thenReturn(testMergeWorkIDFewRowsDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "merge #rows few");
                             put("defType", "dismax");
@@ -178,20 +179,43 @@ public class SearchResourceTest {
                 )
         ).thenReturn(testMergeWorkIDFewRows);
         // Mocking branch_id filter test
-        Mockito.when(test.getResults()).thenReturn(testDocs);
+        Mockito.when(testLaesekompasSolrResponse.getResults()).thenReturn(testDocs);
         Mockito.when(
-                solr.query(Mockito.eq("search"),
+                laesekompasSolr.query(Mockito.eq("search"),
                         Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, "filter on branch");
                             put("defType", "dismax");
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
-                            put("fq", "branch_id:\"b1\"");
+                            put("fq", "branch_id:\"870970/b1\"");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
                         }})))
                 )
-        ).thenReturn(test);
-        searchResource.laesekompasSolr = solr;
+        ).thenReturn(testLaesekompasSolrResponse);
+        // Mocking filter_status test
+        Mockito.when(testLaesekompasSolrResponse.getResults()).thenReturn(testDocs);
+        Mockito.when(
+                laesekompasSolr.query(Mockito.eq("search"),
+                        Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, "filter on status");
+                            put("defType", "dismax");
+                            put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
+                            put("fq", "branch_id:\"870970/b2\"");
+                            put("bf", "log(loans)");
+                            put(CommonParams.ROWS, "10");
+                        }})))
+                )
+        ).thenReturn(testLaesekompasSolrResponse);
+        Mockito.when(testCorepoSolrResponse.getResults()).thenReturn(testDocsEmpty);
+        Mockito.when(
+                corepoSolr.query(Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
+                            put(CommonParams.Q, String.format(SearchResource.COREPO_SOLR_TEXT_QUERY, "870970", "63"));
+                            put(CommonParams.ROWS, "0");
+                        }})))
+                )
+        ).thenReturn(testCorepoSolrResponse);
+        searchResource.laesekompasSolr = laesekompasSolr;
+        searchResource.corepoSolr = corepoSolr;
         searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }
 
@@ -274,15 +298,26 @@ public class SearchResourceTest {
 
     @Test
     public void filterBranchId() throws IOException, SolrServerException {
-        Response response = searchResource.search("filter on branch", "", false, false, 10, false, "b1");
+        Response response = searchResource.search("filter on branch", "", false, false, 10, false, "870970/b1");
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
         List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
-    private static final HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
-    private static final QueryResponse test = Mockito.mock(QueryResponse.class);
+    @Test
+    public void filterOnStatus() throws IOException, SolrServerException {
+        // Laesekompas query mocked to return 1 element, corepo solr mocked to return 0, meaning it has no holdings
+        Response response = searchResource.search("filter on status", "", false, false, 10, true, "870970/b2");
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        assert result.isEmpty();
+    }
+
+    private static final HttpSolrClient laesekompasSolr = Mockito.mock(HttpSolrClient.class);
+    private static final HttpSolrClient corepoSolr = Mockito.mock(HttpSolrClient.class);
+    private static final QueryResponse testLaesekompasSolrResponse = Mockito.mock(QueryResponse.class);
+    private static final QueryResponse testCorepoSolrResponse = Mockito.mock(QueryResponse.class);
     private static final SolrDocument testDoc1 = new SolrDocument() {{
            addField("pid","pid:63");
            addField("author","Cynthia Lennon");
@@ -291,6 +326,9 @@ public class SearchResourceTest {
            addField("type","Bog");
            addField("loans",1);
            addField("a_post",false);
+           addField("bibliographic_record_id",new ArrayList<String>() {{
+               add("63");
+           }});
            addField("_version_","123");
        }};
     private static final SearchEntity testDocSearchEntity1 = new SearchEntity("pid:63",
@@ -305,6 +343,7 @@ public class SearchResourceTest {
                 add("63");
             }}
     );
+    private static final SolrDocumentList testDocsEmpty = new SolrDocumentList() {{}};
     private static final SolrDocumentList testDocs = new SolrDocumentList() {{
        add(testDoc1);
     }};
@@ -317,6 +356,9 @@ public class SearchResourceTest {
         addField("title","merge1");
         addField("type","Ebog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("1");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc2 = new SolrDocument() {{
@@ -326,6 +368,9 @@ public class SearchResourceTest {
         addField("title","merge2");
         addField("type","Bog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("2");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc3 = new SolrDocument() {{
@@ -335,6 +380,9 @@ public class SearchResourceTest {
         addField("title","merge3");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("3");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc4 = new SolrDocument() {{
@@ -344,6 +392,9 @@ public class SearchResourceTest {
         addField("title","merge4");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("3");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDDoc5 = new SolrDocument() {{
@@ -353,6 +404,9 @@ public class SearchResourceTest {
         addField("title","merge5");
         addField("type","Ebog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("4");
+        }});
         addField("a_post",false);
     }};
     // Test that it selects the book, even though it is ranked lower (testMergeWorkIDDoc2)
@@ -412,6 +466,9 @@ public class SearchResourceTest {
         addField("title","merge1");
         addField("type","Ebog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("1");
+        }});
         addField("a_post",true);
     }};
     private static final SolrDocument testMergeWorkIDAPostDoc2 = new SolrDocument() {{
@@ -421,6 +478,9 @@ public class SearchResourceTest {
         addField("title","merge2");
         addField("type","Bog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("2");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDAPostDoc3 = new SolrDocument() {{
@@ -430,6 +490,9 @@ public class SearchResourceTest {
         addField("title","merge3");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("3");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testMergeWorkIDAPostDoc4 = new SolrDocument() {{
@@ -439,6 +502,9 @@ public class SearchResourceTest {
         addField("title","merge4");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("4");
+        }});
         addField("a_post",true);
     }};
     // Test that it selects the A-post, even though a book is in the same work (testMergeWorkIDDoc1)
@@ -482,6 +548,9 @@ public class SearchResourceTest {
         addField("title","Rosy & John");
         addField("type","Bog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("45");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocument testDoc3 = new SolrDocument() {{
@@ -491,6 +560,9 @@ public class SearchResourceTest {
         addField("title","John Lennon");
         addField("type","Ebog");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("91");
+        }});
         addField("a_post",true);
     }};
     private static final SolrDocument testDoc4 = new SolrDocument() {{
@@ -500,6 +572,9 @@ public class SearchResourceTest {
         addField("title","Elton John");
         addField("type","Lydbog (net)");
         addField("loans",1);
+        addField("bibliographic_record_id",new ArrayList<String>() {{
+            add("126");
+        }});
         addField("a_post",false);
     }};
     private static final SolrDocumentList testMergeWorkIDNumRowsDocs = new SolrDocumentList() {{

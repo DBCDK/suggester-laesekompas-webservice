@@ -25,7 +25,6 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
@@ -53,6 +52,7 @@ import java.util.stream.Collectors;
 @Path("search")
 public class SearchResource {
     public static final String SOLR_FULL_TEXT_QUERY = "author^6.0 title^5.0 all abstract";
+    public static final String COREPO_SOLR_TEXT_QUERY = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
     HttpSolrClient laesekompasSolr;
     HttpSolrClient corepoSolr;
@@ -130,7 +130,7 @@ public class SearchResource {
         }});
 
     private static final BiFunction<String, String, SolrParams> onShelfLookupParams = (agencyId, bibId) -> new MapSolrParams(new HashMap<String, String>() {{
-        String query = String.format("holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf", agencyId, bibId);
+        String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
         LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
         put(CommonParams.Q, query);
         put(CommonParams.ROWS, "0");
@@ -180,7 +180,7 @@ public class SearchResource {
                 query, field, exact, mergeWorkID, rows, branchId, filterStatusOnShelf);
 
         // Order of which search results where retrieved
-        int order = 0;
+        Integer order = 0;
         // Index of SolR responses
         int solrSearchIndex = 0;
         boolean solrSearchResultEnd = false;
@@ -195,40 +195,8 @@ public class SearchResource {
             // If we have paged past the number of total results in SolR, we are at the end
             solrSearchResultEnd = (solrSearchIndex+rows) >= (solrResponse.getResults().getNumFound());
 
-            ArrayList<SearchEntity> buffer = new ArrayList<>();
             // Converting search results to SearchEntity
-            for (SolrDocument doc : solrResponse.getResults()) {
-                SearchEntityType type;
-                String docType = (String)doc.get("type");
-                switch (docType){
-                    case "Bog":
-                        type = SearchEntityType.BOOK;
-                        break;
-                    case "Ebog":
-                        type = SearchEntityType.E_BOOK;
-                        break;
-                    case "Lydbog (net)":
-                        type = SearchEntityType.AUDIO_BOOK;
-                        break;
-                    default:
-                        // Even though SolR is being weird in this case, we do not fail
-                        LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
-                        type = SearchEntityType.BOOK;
-                        break;
-                }
-                buffer.add(new SearchEntity(
-                        (String)doc.get("pid"),
-                        (String)doc.get("workid"),
-                        (String)doc.get("title"),
-                        (String)doc.get("author"),
-                        type,
-                        (int)doc.get("loans"),
-                        (boolean)doc.get("a_post"),
-                        order,
-                        (ArrayList<String>) doc.get("bibliographic_record_id"))
-                );
-                order += 1;
-            }
+            ArrayList<SearchEntity> buffer = SearchEntity.searchResultsIntoSearchEntities(solrResponse.getResults(), order);
 
             List<SearchEntity> filtered_buffer;
             // Filter based on holdings items status for each result
@@ -278,6 +246,7 @@ public class SearchResource {
                     }
                 });
             }
+            // Sort merged works according to order to achieve the final result
             searchResults = duplicateRemover.values().parallelStream()
                     // Order integers are never the same
                     .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
