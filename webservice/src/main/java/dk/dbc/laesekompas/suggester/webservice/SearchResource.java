@@ -25,7 +25,6 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
@@ -37,11 +36,7 @@ import org.slf4j.MDC;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -49,6 +44,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,8 +52,10 @@ import java.util.stream.Collectors;
 @Path("search")
 public class SearchResource {
     public static final String SOLR_FULL_TEXT_QUERY = "author^6.0 title^5.0 all abstract";
+    public static final String COREPO_SOLR_TEXT_QUERY = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
-    HttpSolrClient solr;
+    HttpSolrClient laesekompasSolr;
+    HttpSolrClient corepoSolr;
 
     /**
      * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
@@ -66,6 +64,14 @@ public class SearchResource {
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String searchSolrUrl;
+
+    /**
+     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     */
+    @Inject
+    @ConfigProperty(name = "COREPO_SOLR_URL")
+    String corepoSolrUrl;
 
     /**
      * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
@@ -81,7 +87,16 @@ public class SearchResource {
         if(!this.searchSolrUrl.endsWith("/solr")) {
             this.searchSolrUrl = this.searchSolrUrl +"/solr";
         }
-        this.solr = new HttpSolrClient.Builder(searchSolrUrl).build();
+        LOGGER.info("config/laesekompas SolR URL: {}", searchSolrUrl);
+        this.laesekompasSolr = new HttpSolrClient.Builder(searchSolrUrl).build();
+        if(!this.corepoSolrUrl.endsWith("/solr")) {
+            this.corepoSolrUrl = this.corepoSolrUrl +"/solr";
+        }
+        // Appending alias for our specific application
+        this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
+        LOGGER.info("config/corepo SolR URL: {}", searchSolrUrl);
+        this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
+        LOGGER.info("config/laesekompas SolR URL: {}", maxNumberSuggestions);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
     }
 
@@ -114,6 +129,13 @@ public class SearchResource {
             put(CommonParams.ROWS, Integer.toString(params.rows));
         }});
 
+    private static final BiFunction<String, String, SolrParams> onShelfLookupParams = (agencyId, bibId) -> new MapSolrParams(new HashMap<String, String>() {{
+        String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
+        LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
+        put(CommonParams.Q, query);
+        put(CommonParams.ROWS, "0");
+    }});
+
     /**
      * Performs a freeform user search on all the content of laesekompasset.
      * @param query User query search
@@ -125,6 +147,8 @@ public class SearchResource {
      *                    audio book and regular book. Picks A-posts, then books to represent the work.
      * @param rows Number of result rows to be returned
      * @param branchId the branch id the result should filter on, if not given no filtering is applied
+     * @param filterStatusOnShelf Whether materials should be filtered based on if the branch specified in branchId
+     *                            parameter has them OnShelf
      * @return List of search results, ranked by relevancy. With `field` and `exact` set, array will only contain
      * 1 element, as it serves as a lookup.
      * @throws SolrServerException Thrown if the SolR client throws any exceptions
@@ -137,6 +161,7 @@ public class SearchResource {
                            @DefaultValue("false") @QueryParam("exact") boolean exact,
                            @DefaultValue("false") @QueryParam("merge_workid") boolean mergeWorkID,
                            @DefaultValue("10") @QueryParam("rows") int rows,
+                           @DefaultValue("false") @QueryParam("filter_status") boolean filterStatusOnShelf,
                            @QueryParam("branch_id") String branchId) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
@@ -148,47 +173,60 @@ public class SearchResource {
         MDC.put("exact", "" + exact);
         MDC.put("merge_workid", "" + mergeWorkID);
         MDC.put("rows", "" + rows);
+        MDC.put("filter_status", "" + filterStatusOnShelf);
+        MDC.put("branch_id", branchId);
 
-        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}", query, field, exact, mergeWorkID, rows);
+        LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}, branch_id: {}, filter_status: {}",
+                query, field, exact, mergeWorkID, rows, branchId, filterStatusOnShelf);
 
-        QueryResponse solrResponse = solr.query("search", solrSearchParams.apply(
-                // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-                new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId)
-        ));
-
-        int i = 0;
+        // Order of which search results where retrieved
+        Integer order = 0;
+        // Index of SolR responses
+        int solrSearchIndex = 0;
+        boolean solrSearchResultEnd = false;
         List<SearchEntity> searchResults = new ArrayList<>();
-        for (SolrDocument doc : solrResponse.getResults()) {
-            SearchEntityType type;
-            String docType = (String)doc.get("type");
-            switch (docType){
-                case "Bog":
-                    type = SearchEntityType.BOOK;
-                    break;
-                case "Ebog":
-                    type = SearchEntityType.E_BOOK;
-                    break;
-                case "Lydbog (net)":
-                    type = SearchEntityType.AUDIO_BOOK;
-                    break;
-                default:
-                    // Even though SolR is being wierd in this case, we do not fail
-                    LOGGER.warn("SolR had a search document with the following unrecognized type: {}", docType);
-                    type = SearchEntityType.BOOK;
-                    break;
+        // We loop because filterStatusOnShelf might filter out results
+        while (searchResults.size() < rows && !solrSearchResultEnd) {
+            QueryResponse solrResponse = laesekompasSolr.query("search", solrSearchParams.apply(
+                    // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
+                    new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex)
+            ));
+
+            // If we have paged past the number of total results in SolR, we are at the end
+            solrSearchResultEnd = (solrSearchIndex+rows) >= (solrResponse.getResults().getNumFound());
+
+            // Converting search results to SearchEntity
+            ArrayList<SearchEntity> buffer = SearchEntity.searchResultsIntoSearchEntities(solrResponse.getResults(), order);
+
+            List<SearchEntity> filtered_buffer;
+            // Filter based on holdings items status for each result
+            if (branchId != null && filterStatusOnShelf) {
+                String agencyId = branchId.substring(0, 6);
+                filtered_buffer = buffer.stream()
+                        .filter(searchEntity -> {
+                            // Checks if any of the items in the work have an OnShelf status
+                            return searchEntity.getBibIdsInWork().stream()
+                                    .map(bibId -> {
+                                        try {
+                                            QueryResponse response = corepoSolr.query(onShelfLookupParams.apply(agencyId, bibId));
+                                            return response.getResults().getNumFound() > 1;
+                                        } catch (IOException | SolrServerException e) {
+                                            LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
+                                            LOGGER.error("{}", e);
+                                            throw new RuntimeException("Failed talking to corepo SolR");
+                                        }
+                                    })
+                                    // Only one of the bibliographic items needs to be `OnShelf` ie. is true
+                                    .reduce(false, Boolean::logicalOr);
+                        })
+                        .collect(Collectors.toList());
+            } else {
+                filtered_buffer = buffer;
             }
-            searchResults.add(new SearchEntity(
-                    (String)doc.get("pid"),
-                    (String)doc.get("workid"),
-                    (String)doc.get("title"),
-                    (String)doc.get("author"),
-                    type,
-                    (int)doc.get("loans"),
-                    (boolean)doc.get("a_post"),
-                    i)
-            );
-            i += 1;
+            searchResults.addAll(filtered_buffer);
+            solrSearchIndex += rows;
         }
+        // If true, returns 1 material per workID
         if (mergeWorkID) {
             HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
             for (SearchEntity searchEntity : searchResults) {
@@ -208,6 +246,7 @@ public class SearchResource {
                     }
                 });
             }
+            // Sort merged works according to order to achieve the final result
             searchResults = duplicateRemover.values().parallelStream()
                     // Order integers are never the same
                     .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
@@ -228,13 +267,15 @@ public class SearchResource {
         boolean exact;
         int rows;
         String branchId;
+        int start;
 
-        SearchParams(String query, String field, boolean exact, int rows, String branchId) {
+        SearchParams(String query, String field, boolean exact, int rows, String branchId, int start) {
             this.query = query;
             this.field = field;
             this.exact = exact;
             this.rows = rows;
             this.branchId = branchId;
+            this.start = start;
         }
 
         @Override

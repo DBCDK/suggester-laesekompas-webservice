@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -45,14 +46,17 @@ public class SearchResourceIT {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
-        String solrUrl = System.getProperty("suggester.solr.url");
+        String laesekompasSolRUrl = System.getProperty("suggester.solr.url");
+        String corepoSolrUrl = System.getProperty("corepo.solr.url");
 
-        searchResource.searchSolrUrl = solrUrl;
+        searchResource.searchSolrUrl = laesekompasSolRUrl;
+        searchResource.corepoSolrUrl = corepoSolrUrl;
         log.info("We have the SolR suggester URL: {}", searchResource.searchSolrUrl);
+        log.info("We have the Corepo suggester URL: {}", searchResource.corepoSolrUrl);
         searchResource.maxNumberSuggestions = 10;
         searchResource.initialize();
 
-        solrClient = new HttpSolrClient.Builder(solrUrl).build();
+        solrClient = new HttpSolrClient.Builder(laesekompasSolRUrl).build();
         solrClient.deleteByQuery("search", "*:*");
         solrClient.commit("search");
     }
@@ -61,7 +65,7 @@ public class SearchResourceIT {
     public void searchQuery() throws IOException, SolrServerException {
         solrClient.add("search", test1);
         solrClient.commit("search");
-        Response response = searchResource.search("john", "", false, false, 10, null);
+        Response response = searchResource.search("john", "", false, false, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
         assertEquals(result.size(), 1);
     }
