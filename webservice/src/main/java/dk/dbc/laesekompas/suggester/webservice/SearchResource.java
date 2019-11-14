@@ -106,7 +106,7 @@ public class SearchResource {
         LOGGER.info("solrAppId: {}", solrAppId);
     }
 
-    private static final SolrParams SolrSearchParams(SearchParams params) {
+    private static SolrParams SolrSearchParams(SearchParams params) {
         HashMap<String, String> hm = new HashMap<String, String>() {{
             String qf;
             switch (params.field) {
@@ -138,7 +138,7 @@ public class SearchResource {
         return new MapSolrParams(hm);
     }
 
-    private static final SolrParams onShelfLookupParams(String agencyId, String bibId) {
+    private static SolrParams onShelfLookupParams(String agencyId, String bibId) {
         String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
         LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
         HashMap<String, String> hm = new HashMap<String, String>() {{
