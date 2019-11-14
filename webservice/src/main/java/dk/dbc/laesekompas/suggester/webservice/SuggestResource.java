@@ -64,6 +64,13 @@ public class SuggestResource {
     String suggesterSolrUrl;
 
     /**
+     * SOLR_APPID is the Application ID that we send to Solr for tracing purposes.
+     */
+    @Inject
+    @ConfigProperty(name = "SOLR_APPID")
+    String solrAppId;
+
+    /**
      * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
      * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
      * on the SolR.
@@ -81,7 +88,7 @@ public class SuggestResource {
         this.suggester = new SolrLaesekompasSuggester(this.solr);
     }
 
-    private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {
+    private Response suggest(SuggestType suggestType, String query, String solrAppId) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
@@ -90,9 +97,9 @@ public class SuggestResource {
         MDC.put("query", query);
         MDC.put("collection", suggestType.getCollection());
 
-        LOGGER.info("suggestion performed with query: {}, collectcion: {}", query, suggestType.toString());
+        LOGGER.info("suggestion performed with query: {}, collection: {}", query, suggestType.toString());
 
-        SuggestQueryResponse response = suggester.suggestQuery(query, suggestType);
+        SuggestQueryResponse response = suggester.suggestQuery(query, suggestType, solrAppId);
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.
@@ -140,7 +147,7 @@ public class SuggestResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.ALL, query);
+        return suggest(SuggestType.ALL, query, solrAppId);
     }
 
     /**
@@ -154,7 +161,7 @@ public class SuggestResource {
     @Path("/e_book")
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestEBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.E_BOOK, query);
+        return suggest(SuggestType.E_BOOK, query, solrAppId);
     }
 
     /**
@@ -168,6 +175,6 @@ public class SuggestResource {
     @Path("/audio_book")
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestAudioBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.AUDIO_BOOK, query);
+        return suggest(SuggestType.AUDIO_BOOK, query, solrAppId);
     }
 }
