@@ -44,6 +44,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.eq;
 
 public class SuggestResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
@@ -57,17 +58,17 @@ public class SuggestResourceTest {
         suggestResource.suggesterSolrUrl = "http://invalid.invalid";
         HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
         SolrLaesekompasSuggester suggester = Mockito.mock(SolrLaesekompasSuggester.class);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(test);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test_multiple_type"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_multiple_type"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(testMultipleType);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(testRemoveDuplicateTitle);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(testRemoveDuplicateAuthor);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(testRemoveDuplicateTag);
-        Mockito.when(suggester.suggestQuery(Mockito.eq("test_max_suggestions"), Mockito.any(SuggestType.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_max_suggestions"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
                 .thenReturn(testMaxSuggestions);
         suggestResource.solr = solr;
         suggestResource.suggester = suggester;
