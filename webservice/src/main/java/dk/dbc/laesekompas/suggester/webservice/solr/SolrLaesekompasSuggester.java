@@ -47,10 +47,11 @@ public class SolrLaesekompasSuggester {
         this.solrClient = solrClient;
     }
 
-    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType) throws IOException, SolrServerException {
+    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType, String appId) throws IOException, SolrServerException {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRequestHandler("/"+suggestType.getCollection()+"/suggest");
         solrQuery.setParam("suggest.q", query);
+        solrQuery.setParam("appId", appId);
         QueryResponse resp = solrClient.query(solrQuery);
         SuggesterResponse suggesterResponse = resp.getSuggesterResponse();
 

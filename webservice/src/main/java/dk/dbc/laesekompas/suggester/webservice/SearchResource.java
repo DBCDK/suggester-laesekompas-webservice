@@ -44,8 +44,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -74,6 +72,13 @@ public class SearchResource {
     String corepoSolrUrl;
 
     /**
+     * SOLR_APPID is the Application ID that we send to Solr for tracing purposes.
+     */
+    @Inject
+    @ConfigProperty(name = "SOLR_APPID")
+    String solrAppId;
+
+    /**
      * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
      * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
      * on the SolR.
@@ -98,9 +103,11 @@ public class SearchResource {
         this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
         LOGGER.info("config/laesekompas SolR URL: {}", maxNumberSuggestions);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
+        LOGGER.info("solrAppId: {}", solrAppId);
     }
 
-    private static final Function<SearchParams, SolrParams> solrSearchParams = params -> new MapSolrParams(new HashMap<String, String>() {{
+    private static SolrParams SolrSearchParams(SearchParams params) {
+        HashMap<String, String> hm = new HashMap<String, String>() {{
             String qf;
             switch (params.field) {
                 case "author":
@@ -127,14 +134,19 @@ public class SearchResource {
                 put("fq", "branch_id:\""+params.branchId+"\"");
             }
             put(CommonParams.ROWS, Integer.toString(params.rows));
-        }});
+        }};
+        return new MapSolrParams(hm);
+    }
 
-    private static final BiFunction<String, String, SolrParams> onShelfLookupParams = (agencyId, bibId) -> new MapSolrParams(new HashMap<String, String>() {{
+    private static SolrParams onShelfLookupParams(String agencyId, String bibId) {
         String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
         LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
-        put(CommonParams.Q, query);
-        put(CommonParams.ROWS, "0");
-    }});
+        HashMap<String, String> hm = new HashMap<String, String>() {{
+            put(CommonParams.Q, query);
+            put(CommonParams.ROWS, "0");
+        }};
+        return new MapSolrParams(hm);
+    }
 
     /**
      * Performs a freeform user search on all the content of laesekompasset.
@@ -187,10 +199,9 @@ public class SearchResource {
         List<SearchEntity> searchResults = new ArrayList<>();
         // We loop because filterStatusOnShelf might filter out results
         while (searchResults.size() < rows && !solrSearchResultEnd) {
-            QueryResponse solrResponse = laesekompasSolr.query("search", solrSearchParams.apply(
-                    // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-                    new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex)
-            ));
+            // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
+            SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex));
+            QueryResponse solrResponse = laesekompasSolr.query("search", params);
 
             // If we have paged past the number of total results in SolR, we are at the end
             solrSearchResultEnd = (solrSearchIndex+rows) >= (solrResponse.getResults().getNumFound());
@@ -208,7 +219,7 @@ public class SearchResource {
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
-                                            QueryResponse response = corepoSolr.query(onShelfLookupParams.apply(agencyId, bibId));
+                                            QueryResponse response = corepoSolr.query(onShelfLookupParams(agencyId, bibId));
                                             return response.getResults().getNumFound() > 1;
                                         } catch (IOException | SolrServerException e) {
                                             LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
