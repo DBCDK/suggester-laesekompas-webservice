@@ -45,6 +45,7 @@ import static org.junit.Assert.assertThat;
 
 public class SolrLaesekompasSuggesterTest {
     private static SolrLaesekompasSuggester solrLaesekompasSuggester;
+    private final static String testAppId = "OnlyUsedForTest";
 
     private class QuerySolrQueryMatcher extends BaseMatcher<SolrQuery> {
         String query;
@@ -91,21 +92,24 @@ public class SolrLaesekompasSuggesterTest {
 
     @Test
     public void testOrderBlendedInfixByWeight() throws IOException, SolrServerException {
-        SuggestQueryResponse response = solrLaesekompasSuggester.suggestQuery("test_infix_blended_sort_by_weight", SuggestType.ALL);
+        SuggestQueryResponse response = solrLaesekompasSuggester
+                .suggestQuery("test_infix_blended_sort_by_weight", SuggestType.ALL, testAppId);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byWeight1, byWeight2, byWeight3));
     }
 
     @Test
     public void testOrderBlendedInfixByTermWhenWeightIsEqual() throws IOException, SolrServerException {
-        SuggestQueryResponse response = solrLaesekompasSuggester.suggestQuery("test_infix_blended_sort_by_term", SuggestType.ALL);
+        SuggestQueryResponse response = solrLaesekompasSuggester
+                .suggestQuery("test_infix_blended_sort_by_term", SuggestType.ALL, testAppId);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byTerm1, byTerm2, byTerm3));
     }
 
     @Test
     public void testOrderBlendedInfixByTermAndWeight() throws IOException, SolrServerException {
-        SuggestQueryResponse response = solrLaesekompasSuggester.suggestQuery("test_infix_blended_sort_by_both", SuggestType.ALL);
+        SuggestQueryResponse response = solrLaesekompasSuggester
+                .suggestQuery("test_infix_blended_sort_by_both", SuggestType.ALL, testAppId);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byWeightTerm1, byWeightTerm2,
                 byWeightTerm3, byWeightTerm4, byWeightTerm5, byWeightTerm6));

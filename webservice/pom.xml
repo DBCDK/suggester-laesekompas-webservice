@@ -31,12 +31,11 @@
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
     </dependency>
-    <!--
     <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <version>3.0.1</version>
     </dependency>
-    -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -60,7 +59,7 @@
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
-      <version>7.6.0</version>
+      <version>8.3.0</version>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -196,6 +195,7 @@
         <configuration>
           <systemPropertyVariables>
             <suggester.solr.url>http://${docker.host.address}:${suggest.solr.host.port}/solr</suggester.solr.url>
+            <corepo.solr.url>http://cisterne-solr.dbc.dk:8986/solr</corepo.solr.url>
           </systemPropertyVariables>
         </configuration>
       </plugin>

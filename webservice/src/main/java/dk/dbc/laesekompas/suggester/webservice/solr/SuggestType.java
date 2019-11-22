@@ -20,13 +20,16 @@ package dk.dbc.laesekompas.suggester.webservice.solr;
  * File created: 20/02/2019
  */
 
+/**
+ * Enum containing all the suggest SolR collections in use.
+ */
 public enum SuggestType {
     ALL("suggest-all"),
     E_BOOK("suggest-e_book"),
     AUDIO_BOOK("suggest-audio_book");
     private String collection;
 
-    private SuggestType(String collection) {
+    SuggestType(String collection) {
         this.collection = collection;
     }
 

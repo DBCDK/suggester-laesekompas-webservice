@@ -55,10 +55,26 @@ public class SuggestResource {
     HttpSolrClient solr;
     SolrLaesekompasSuggester suggester;
 
+    /**
+     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     */
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String suggesterSolrUrl;
 
+    /**
+     * SOLR_APPID is the Application ID that we send to Solr for tracing purposes.
+     */
+    @Inject
+    @ConfigProperty(name = "SOLR_APPID")
+    String solrAppId;
+
+    /**
+     * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
+     * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
+     * on the SolR.
+     */
     @Inject
     @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
     Integer maxNumberSuggestions;
@@ -72,17 +88,18 @@ public class SuggestResource {
         this.suggester = new SolrLaesekompasSuggester(this.solr);
     }
 
-    private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {
+    private Response suggest(SuggestType suggestType, String query, String solrAppId) throws SolrServerException, IOException {
         // We require a query
         if (query == null) {
             return Response.status(400).build();
         }
+        MDC.put("requestType", "suggest");
+        MDC.put("query", query);
+        MDC.put("collection", suggestType.getCollection());
 
-        try (MDC.MDCCloseable _ = MDC.putCloseable("query", query)) {
-            LOGGER.info("/suggest/* performed with query: {}, type: {}", query, suggestType);
-        }
+        LOGGER.info("suggestion performed with query: {}, collection: {}", query, suggestType.toString());
 
-        SuggestQueryResponse response = suggester.suggestQuery(query, suggestType);
+        SuggestQueryResponse response = suggester.suggestQuery(query, suggestType, solrAppId);
         // Concatenate results in same order as suggester SolR proposed, preferring infix, then blended_infix,
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.
@@ -107,32 +124,57 @@ public class SuggestResource {
                     TitleSuggestionEntity title = (TitleSuggestionEntity) suggestion;
                     duplicateRemover.putIfAbsent("pid:" + title.getPid(), title);
                     break;
+                default:
+                    break;
+
             }
         }
         // Convert to list, keeping order
         List<SuggestionEntity> suggestions = new ArrayList<>();
         duplicateRemover.forEach((k,s) -> suggestions.add(s));
 
+        MDC.clear();
         return Response.ok().entity(suggestions.subList(0, Integer.min(maxNumberSuggestions, suggestions.size()))).build();
     }
 
+    /**
+     * Gives suggestions for all book types
+     * @param query query to give suggestions from
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestAll(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.ALL, query);
+        return suggest(SuggestType.ALL, query, solrAppId);
     }
 
+    /**
+     * Gives suggestions for only EBooks
+     * @param query query to give suggestions from
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
+     */
     @GET
     @Path("/e_book")
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestEBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.E_BOOK, query);
+        return suggest(SuggestType.E_BOOK, query, solrAppId);
     }
 
+    /**
+     * Gives suggestions for only audio books
+     * @param query query to give suggestions from
+     * @return List of suggestions
+     * @throws SolrServerException Thrown if the SolR client throws any exceptions
+     * @throws IOException Thrown if the network connection to the SolR fails
+     */
     @GET
     @Path("/audio_book")
     @Produces(MediaType.APPLICATION_JSON)
     public Response suggestAudioBooks(@QueryParam("query") String query) throws SolrServerException, IOException {
-        return suggest(SuggestType.AUDIO_BOOK, query);
+        return suggest(SuggestType.AUDIO_BOOK, query, solrAppId);
     }
 }

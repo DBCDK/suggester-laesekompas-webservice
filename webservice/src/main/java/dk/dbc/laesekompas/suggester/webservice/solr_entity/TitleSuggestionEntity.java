@@ -20,11 +20,18 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
  * File created: 20/02/2019
  */
 
+import java.util.Objects;
+
 public class TitleSuggestionEntity extends SuggestionEntity {
     private String title;
     private String authorName;
     private String workid;
     private String pid;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, authorName, workid, pid);
+    }
 
     public TitleSuggestionEntity(String matchedTerm, long weight, String title, String authorName, String workid, String pid) {
         super(matchedTerm, "TITLE", weight);
@@ -75,11 +82,11 @@ public class TitleSuggestionEntity extends SuggestionEntity {
             return false;
         }
         TitleSuggestionEntity that = (TitleSuggestionEntity) o;
-        return (this.matchedTerm.equals(that.matchedTerm)) &&
-                (this.type.equals(that.type)) &&
-                (this.title.equals(that.title)) &&
-                (this.authorName.equals(that.authorName)) &&
-                (this.pid.equals(that.pid)) &&
-                (this.workid.equals(that.workid));
+        return this.matchedTerm.equals(that.matchedTerm) &&
+                this.type.equals(that.type) &&
+                this.title.equals(that.title) &&
+                this.authorName.equals(that.authorName) &&
+                this.pid.equals(that.pid) &&
+                this.workid.equals(that.workid);
     }
 }

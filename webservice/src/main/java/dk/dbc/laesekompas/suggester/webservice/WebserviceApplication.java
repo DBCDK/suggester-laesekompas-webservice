@@ -23,6 +23,7 @@ public class WebserviceApplication extends Application {
     static {
         classes.add(SuggestResource.class);
         classes.add(SearchResource.class);
+        classes.add(SolrProxyBean.class);
         classes.add(StatusBean.class);
     }
 

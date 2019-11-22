@@ -38,6 +38,16 @@
     <p>
         <kbd>rows</kbd> specifies the maximum number of rows returned, defaults to 10.
     </p>
+    <p>
+        <kbd>branch_id</kbd> optional branch ID, filters so only results matching the query and exist on the given branch
+        are returned. As of now, only branches having materials on the bibliographic post that represents the work can
+        show up when filtering. This means that libraries having holdings of the same work, but not the exact books
+        that are indexed (representing the work) does not show up.
+    </p>
+    <p>
+        <kbd>filter_status</kbd> optional filter_status, filters so that only results matching the given filter status
+        are returned.
+    </p>
     <a href="https://github.com/DBCDK/suggester-laesekompas-webservice">Source code</a>
 </body>
 </html>
