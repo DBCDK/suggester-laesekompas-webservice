@@ -22,6 +22,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -64,8 +65,7 @@ public class SearchResource {
     String searchSolrUrl;
 
     /**
-     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
-     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     * COPREPO_SOLR_URL is the URL for the corepo solr url
      */
     @Inject
     @ConfigProperty(name = "COREPO_SOLR_URL")
@@ -99,14 +99,16 @@ public class SearchResource {
         }
         // Appending alias for our specific application
         this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
-        LOGGER.info("config/corepo SolR URL: {}", searchSolrUrl);
+        LOGGER.info("config/corepo SolR URL: {}", corepoSolrUrl);
         this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
-        LOGGER.info("config/laesekompas SolR URL: {}", maxNumberSuggestions);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
+        if (solrAppId == null) {
+            solrAppId = "";
+        }
         LOGGER.info("solrAppId: {}", solrAppId);
     }
 
-    private static SolrParams SolrSearchParams(SearchParams params) {
+    private static SolrParams SolrSearchParams(SearchParams params, String solrAppId) {
         HashMap<String, String> hm = new HashMap<String, String>() {{
             String qf;
             switch (params.field) {
@@ -130,6 +132,7 @@ public class SearchResource {
             put("defType", "dismax");
             put("qf", qf);
             put("bf", "log(loans)");
+            put("appId", solrAppId);
             if (params.branchId != null) {
                 put("fq", "branch_id:\""+params.branchId+"\"");
             }
@@ -138,7 +141,7 @@ public class SearchResource {
         return new MapSolrParams(hm);
     }
 
-    private static SolrParams onShelfLookupParams(String agencyId, String bibId) {
+    private static SolrParams onShelfLookupParams(String agencyId, String bibId, String solrAppId) {
         String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
         LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
         HashMap<String, String> hm = new HashMap<String, String>() {{
@@ -147,6 +150,16 @@ public class SearchResource {
         }};
         return new MapSolrParams(hm);
     }
+
+    private static SolrQuery onShelfLookupQuery(String agencyId, String bibId, String solrAppId) {
+        String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
+        SolrQuery res = new SolrQuery();
+        res.setParam(CommonParams.Q, query);
+        res.setParam(CommonParams.ROWS, "0");
+//        res.setParam("appId", solrAppId);
+        return res;
+    }
+
 
     /**
      * Performs a freeform user search on all the content of laesekompasset.
@@ -200,7 +213,7 @@ public class SearchResource {
         // We loop because filterStatusOnShelf might filter out results
         while (searchResults.size() < rows && !solrSearchResultEnd) {
             // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-            SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex));
+            SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex), solrAppId);
             QueryResponse solrResponse = laesekompasSolr.query("search", params);
 
             // If we have paged past the number of total results in SolR, we are at the end
@@ -212,6 +225,7 @@ public class SearchResource {
             List<SearchEntity> filtered_buffer;
             // Filter based on holdings items status for each result
             if (branchId != null && filterStatusOnShelf) {
+                LOGGER.debug("filtering...");
                 String agencyId = branchId.substring(0, 6);
                 filtered_buffer = buffer.stream()
                         .filter(searchEntity -> {
@@ -219,7 +233,10 @@ public class SearchResource {
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
-                                            QueryResponse response = corepoSolr.query(onShelfLookupParams(agencyId, bibId));
+
+                                            SolrParams solrParams = onShelfLookupParams(agencyId, bibId, solrAppId);
+                                            SolrQuery solrQuery = onShelfLookupQuery(agencyId, bibId, solrAppId);
+                                            QueryResponse response = corepoSolr.query(solrQuery);
                                             return response.getResults().getNumFound() > 1;
                                         } catch (IOException | SolrServerException e) {
                                             LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);

@@ -1,6 +1,7 @@
 FROM docker.dbc.dk/payara5-micro:latest
 
 ENV MAX_POOL_SIZE=3
+ENV PAYARA_ARGS --debug
 
 LABEL SUGGESTER_SOLR_URL="Suggester SolR url (required)" \
       MAX_NUMBER_SUGGESTIONS="The maximum number of suggestions returned (default: 10)" \
