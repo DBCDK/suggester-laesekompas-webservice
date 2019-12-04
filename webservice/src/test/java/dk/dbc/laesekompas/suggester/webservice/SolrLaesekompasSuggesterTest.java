@@ -45,7 +45,6 @@ import static org.junit.Assert.assertThat;
 
 public class SolrLaesekompasSuggesterTest {
     private static SolrLaesekompasSuggester solrLaesekompasSuggester;
-    private final static String testAppId = "OnlyUsedForTest";
 
     private class QuerySolrQueryMatcher extends BaseMatcher<SolrQuery> {
         String query;

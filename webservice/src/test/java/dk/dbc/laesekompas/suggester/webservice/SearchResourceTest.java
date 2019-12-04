@@ -51,7 +51,6 @@ public class SearchResourceTest {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
-        searchResource.solrAppId = "";
 
         searchResource.searchSolrUrl = "http://invalid.invalid";
         searchResource.corepoSolrUrl = "http://invalid2.invalid";
