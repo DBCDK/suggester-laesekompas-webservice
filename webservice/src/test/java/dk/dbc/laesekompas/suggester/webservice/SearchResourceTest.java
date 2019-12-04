@@ -225,6 +225,7 @@ public class SearchResourceTest {
                 corepoSolr.query(Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, String.format(SearchResource.COREPO_SOLR_TEXT_QUERY, "870970", "63"));
                             put(CommonParams.ROWS, "0");
+                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testCorepoSolrResponse);
@@ -320,14 +321,14 @@ public class SearchResourceTest {
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
-//    @Test
-//    public void filterOnStatus() throws IOException, SolrServerException {
-//        // Laesekompas query mocked to return 1 element, corepo solr mocked to return 0, meaning it has no holdings
-//        Response response = searchResource.search("filter on status", "", false, false, 10, true, "870970/b2");
-//        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
-//
-//        assert result.isEmpty();
-//    }
+    @Test
+    public void filterOnStatus() throws IOException, SolrServerException {
+        // Laesekompas query mocked to return 1 element, corepo solr mocked to return 0, meaning it has no holdings
+        Response response = searchResource.search("filter on status", "", false, false, 10, true, "870970/b2");
+        List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
+
+        assert result.isEmpty();
+    }
 
     private static final HttpSolrClient laesekompasSolr = Mockito.mock(HttpSolrClient.class);
     private static final HttpSolrClient corepoSolr = Mockito.mock(HttpSolrClient.class);

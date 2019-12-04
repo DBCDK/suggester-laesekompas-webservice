@@ -141,25 +141,14 @@ public class SearchResource {
         return new MapSolrParams(hm);
     }
 
-    private static SolrParams onShelfLookupParams(String agencyId, String bibId, String solrAppId) {
-        String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
-        LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
-        HashMap<String, String> hm = new HashMap<String, String>() {{
-            put(CommonParams.Q, query);
-            put(CommonParams.ROWS, "0");
-        }};
-        return new MapSolrParams(hm);
-    }
-
     private static SolrQuery onShelfLookupQuery(String agencyId, String bibId, String solrAppId) {
         String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
         SolrQuery res = new SolrQuery();
         res.setParam(CommonParams.Q, query);
         res.setParam(CommonParams.ROWS, "0");
-//        res.setParam("appId", solrAppId);
+        res.setParam("appId", solrAppId);
         return res;
     }
-
 
     /**
      * Performs a freeform user search on all the content of laesekompasset.
@@ -233,11 +222,9 @@ public class SearchResource {
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
-
-                                            SolrParams solrParams = onShelfLookupParams(agencyId, bibId, solrAppId);
                                             SolrQuery solrQuery = onShelfLookupQuery(agencyId, bibId, solrAppId);
                                             QueryResponse response = corepoSolr.query(solrQuery);
-                                            return response.getResults().getNumFound() > 1;
+                                            return response != null && response.getResults().getNumFound() > 1;
                                         } catch (IOException | SolrServerException e) {
                                             LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
                                             LOGGER.error("{}", e);
