@@ -2,7 +2,7 @@ package dk.dbc.laesekompas.suggester.webservice.solr;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
  * microservice-sample is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -47,11 +47,10 @@ public class SolrLaesekompasSuggester {
         this.solrClient = solrClient;
     }
 
-    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType, String appId) throws IOException, SolrServerException {
+    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType) throws IOException, SolrServerException {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRequestHandler("/"+suggestType.getCollection()+"/suggest");
         solrQuery.setParam("suggest.q", query);
-        solrQuery.setParam("appId", appId);
         QueryResponse resp = solrClient.query(solrQuery);
         SuggesterResponse suggesterResponse = resp.getSuggesterResponse();
 

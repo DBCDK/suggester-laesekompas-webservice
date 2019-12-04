@@ -2,7 +2,7 @@ package dk.dbc.laesekompas.suggester.webservice.solr_entity;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
  * microservice-sample is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by

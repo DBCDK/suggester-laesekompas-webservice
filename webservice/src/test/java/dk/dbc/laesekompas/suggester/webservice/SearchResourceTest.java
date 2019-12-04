@@ -2,7 +2,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
  * microservice-sample is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -65,7 +65,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -78,7 +77,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "20");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -91,7 +89,6 @@ public class SearchResourceTest {
                             put("qf", "author");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -104,7 +101,6 @@ public class SearchResourceTest {
                             put("qf", "author_exact");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -117,7 +113,6 @@ public class SearchResourceTest {
                             put("qf", "title");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -130,7 +125,6 @@ public class SearchResourceTest {
                             put("qf", "title_exact");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -144,7 +138,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "30");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testMergeWorkID);
@@ -158,7 +151,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "30");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testMergeWorkIDAPost);
@@ -172,7 +164,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "6");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testMergeWorkIDNumRows);
@@ -186,7 +177,6 @@ public class SearchResourceTest {
                             put("qf", SearchResource.SOLR_FULL_TEXT_QUERY);
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "15");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testMergeWorkIDFewRows);
@@ -201,7 +191,6 @@ public class SearchResourceTest {
                             put("fq", "branch_id:\"870970/b1\"");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);
@@ -216,7 +205,6 @@ public class SearchResourceTest {
                             put("fq", "branch_id:\"870970/b2\"");
                             put("bf", "log(loans)");
                             put(CommonParams.ROWS, "10");
-                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testLaesekompasSolrResponse);

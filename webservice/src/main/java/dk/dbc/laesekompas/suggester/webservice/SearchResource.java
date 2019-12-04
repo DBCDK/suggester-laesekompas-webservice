@@ -2,7 +2,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
  * microservice-sample is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -108,7 +108,7 @@ public class SearchResource {
         LOGGER.info("solrAppId: {}", solrAppId);
     }
 
-    private static SolrParams SolrSearchParams(SearchParams params, String solrAppId) {
+    private static SolrParams SolrSearchParams(SearchParams params) {
         HashMap<String, String> hm = new HashMap<String, String>() {{
             String qf;
             switch (params.field) {
@@ -132,7 +132,6 @@ public class SearchResource {
             put("defType", "dismax");
             put("qf", qf);
             put("bf", "log(loans)");
-            put("appId", solrAppId);
             if (params.branchId != null) {
                 put("fq", "branch_id:\""+params.branchId+"\"");
             }
@@ -202,7 +201,7 @@ public class SearchResource {
         // We loop because filterStatusOnShelf might filter out results
         while (searchResults.size() < rows && !solrSearchResultEnd) {
             // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
-            SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex), solrAppId);
+            SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex));
             QueryResponse solrResponse = laesekompasSolr.query("search", params);
 
             // If we have paged past the number of total results in SolR, we are at the end
