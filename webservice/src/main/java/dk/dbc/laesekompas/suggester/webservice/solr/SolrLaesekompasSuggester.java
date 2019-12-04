@@ -72,7 +72,6 @@ public class SolrLaesekompasSuggester {
                 } else if (se1.getWeight() > se2.getWeight()) {
                     return -1;
                 } else {
-                    // se1.getWeight() == se2.getWeight()
                     return se1.getMatchedTerm().compareTo(se2.getMatchedTerm());
                 }
             });

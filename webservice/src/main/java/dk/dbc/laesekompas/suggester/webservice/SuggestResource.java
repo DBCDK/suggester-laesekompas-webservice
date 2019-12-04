@@ -97,13 +97,12 @@ public class SuggestResource {
         // then fuzzy. Duplicates are combined, by picking the "highest" suggested. LinkedHashMap is a map preserving
         // operations order when iterated through, so first inserted is first iterated.
         LinkedHashMap<String, SuggestionEntity> duplicateRemover = new LinkedHashMap<>();
-        List<SuggestionEntity> anaylzer = response.getAnalyzer();
-        //List<SuggestionEntity> infix = response.getInfix();
+        List<SuggestionEntity> analyzer = response.getAnalyzer();
         List<SuggestionEntity> infixBlended = response.getInfixBlended();
         List<SuggestionEntity> fuzzy = response.getFuzzy();
-        anaylzer.addAll(infixBlended);
-        anaylzer.addAll(fuzzy);
-        for(SuggestionEntity suggestion : anaylzer) {
+        analyzer.addAll(infixBlended);
+        analyzer.addAll(fuzzy);
+        for(SuggestionEntity suggestion : analyzer) {
             switch (suggestion.getType()) {
                 case "TAG":
                     TagSuggestionEntity tag = (TagSuggestionEntity) suggestion;
