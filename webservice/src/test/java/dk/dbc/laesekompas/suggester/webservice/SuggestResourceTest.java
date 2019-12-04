@@ -2,7 +2,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
  * microservice-sample is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -58,17 +58,17 @@ public class SuggestResourceTest {
         suggestResource.suggesterSolrUrl = "http://invalid.invalid";
         HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
         SolrLaesekompasSuggester suggester = Mockito.mock(SolrLaesekompasSuggester.class);
-        Mockito.when(suggester.suggestQuery(eq("test"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test"), Mockito.any(SuggestType.class)))
                 .thenReturn(test);
-        Mockito.when(suggester.suggestQuery(eq("test_multiple_type"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_multiple_type"), Mockito.any(SuggestType.class)))
                 .thenReturn(testMultipleType);
-        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_title"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateTitle);
-        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_author"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateAuthor);
-        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_remove_duplicate_tag"), Mockito.any(SuggestType.class)))
                 .thenReturn(testRemoveDuplicateTag);
-        Mockito.when(suggester.suggestQuery(eq("test_max_suggestions"), Mockito.any(SuggestType.class), Mockito.any(String.class)))
+        Mockito.when(suggester.suggestQuery(eq("test_max_suggestions"), Mockito.any(SuggestType.class)))
                 .thenReturn(testMaxSuggestions);
         suggestResource.solr = solr;
         suggestResource.suggester = suggester;
