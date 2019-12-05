@@ -2,14 +2,14 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
- * microservice-sample is free software: you can redistribute it and/or modify
+ * suggester-laesekompas-webservice is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * microservice-sample is distributed in the hope that it will be useful,
+ * suggester-laesekompas-webservice is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -22,6 +22,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -64,8 +65,7 @@ public class SearchResource {
     String searchSolrUrl;
 
     /**
-     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
-     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
+     * COPREPO_SOLR_URL is the URL for the corepo solr url
      */
     @Inject
     @ConfigProperty(name = "COREPO_SOLR_URL")
@@ -99,10 +99,12 @@ public class SearchResource {
         }
         // Appending alias for our specific application
         this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
-        LOGGER.info("config/corepo SolR URL: {}", searchSolrUrl);
+        LOGGER.info("config/corepo SolR URL: {}", corepoSolrUrl);
         this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
-        LOGGER.info("config/laesekompas SolR URL: {}", maxNumberSuggestions);
         LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
+        if (solrAppId == null) {
+            solrAppId = "";
+        }
         LOGGER.info("solrAppId: {}", solrAppId);
     }
 
@@ -138,14 +140,13 @@ public class SearchResource {
         return new MapSolrParams(hm);
     }
 
-    private static SolrParams onShelfLookupParams(String agencyId, String bibId) {
+    private static SolrQuery onShelfLookupQuery(String agencyId, String bibId, String solrAppId) {
         String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
-        LOGGER.debug("Query for holdings items OnShelf lookup: {}", query);
-        HashMap<String, String> hm = new HashMap<String, String>() {{
-            put(CommonParams.Q, query);
-            put(CommonParams.ROWS, "0");
-        }};
-        return new MapSolrParams(hm);
+        SolrQuery res = new SolrQuery();
+        res.setParam(CommonParams.Q, query);
+        res.setParam(CommonParams.ROWS, "0");
+        res.setParam("appId", solrAppId);
+        return res;
     }
 
     /**
@@ -212,6 +213,7 @@ public class SearchResource {
             List<SearchEntity> filtered_buffer;
             // Filter based on holdings items status for each result
             if (branchId != null && filterStatusOnShelf) {
+                LOGGER.debug("filtering...");
                 String agencyId = branchId.substring(0, 6);
                 filtered_buffer = buffer.stream()
                         .filter(searchEntity -> {
@@ -219,8 +221,9 @@ public class SearchResource {
                             return searchEntity.getBibIdsInWork().stream()
                                     .map(bibId -> {
                                         try {
-                                            QueryResponse response = corepoSolr.query(onShelfLookupParams(agencyId, bibId));
-                                            return response.getResults().getNumFound() > 1;
+                                            SolrQuery solrQuery = onShelfLookupQuery(agencyId, bibId, solrAppId);
+                                            QueryResponse response = corepoSolr.query(solrQuery);
+                                            return response != null && response.getResults().getNumFound() > 1;
                                         } catch (IOException | SolrServerException e) {
                                             LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
                                             LOGGER.error("{}", e);

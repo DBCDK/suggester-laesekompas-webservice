@@ -2,14 +2,14 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
- * microservice-sample is free software: you can redistribute it and/or modify
+ * suggester-laesekompas-webservice is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * microservice-sample is distributed in the hope that it will be useful,
+ * suggester-laesekompas-webservice is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -32,6 +32,7 @@ import org.apache.solr.common.params.MapSolrParams;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,6 +212,7 @@ public class SearchResourceTest {
                 corepoSolr.query(Mockito.argThat(new SolrParamsMatcher(new MapSolrParams(new HashMap<String, String>() {{
                             put(CommonParams.Q, String.format(SearchResource.COREPO_SOLR_TEXT_QUERY, "870970", "63"));
                             put(CommonParams.ROWS, "0");
+                            put("appId", "");
                         }})))
                 )
         ).thenReturn(testCorepoSolrResponse);
