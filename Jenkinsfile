@@ -2,7 +2,7 @@
 def dockerRepository = 'https://docker-os.dbc.dk'
 
 pipeline {
-    agent { label "devel8" }
+    agent { label "devel10" }
     tools {
         maven "maven 3.5"
     }
