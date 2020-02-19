@@ -2,14 +2,14 @@ package dk.dbc.laesekompas.suggester.webservice;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
- * microservice-sample is free software: you can redistribute it and/or modify
+ * suggester-laesekompas-webservice is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * microservice-sample is distributed in the hope that it will be useful,
+ * suggester-laesekompas-webservice is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -45,7 +45,6 @@ import static org.junit.Assert.assertThat;
 
 public class SolrLaesekompasSuggesterTest {
     private static SolrLaesekompasSuggester solrLaesekompasSuggester;
-    private final static String testAppId = "OnlyUsedForTest";
 
     private class QuerySolrQueryMatcher extends BaseMatcher<SolrQuery> {
         String query;
@@ -93,7 +92,7 @@ public class SolrLaesekompasSuggesterTest {
     @Test
     public void testOrderBlendedInfixByWeight() throws IOException, SolrServerException {
         SuggestQueryResponse response = solrLaesekompasSuggester
-                .suggestQuery("test_infix_blended_sort_by_weight", SuggestType.ALL, testAppId);
+                .suggestQuery("test_infix_blended_sort_by_weight", SuggestType.ALL);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byWeight1, byWeight2, byWeight3));
     }
@@ -101,7 +100,7 @@ public class SolrLaesekompasSuggesterTest {
     @Test
     public void testOrderBlendedInfixByTermWhenWeightIsEqual() throws IOException, SolrServerException {
         SuggestQueryResponse response = solrLaesekompasSuggester
-                .suggestQuery("test_infix_blended_sort_by_term", SuggestType.ALL, testAppId);
+                .suggestQuery("test_infix_blended_sort_by_term", SuggestType.ALL);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byTerm1, byTerm2, byTerm3));
     }
@@ -109,7 +108,7 @@ public class SolrLaesekompasSuggesterTest {
     @Test
     public void testOrderBlendedInfixByTermAndWeight() throws IOException, SolrServerException {
         SuggestQueryResponse response = solrLaesekompasSuggester
-                .suggestQuery("test_infix_blended_sort_by_both", SuggestType.ALL, testAppId);
+                .suggestQuery("test_infix_blended_sort_by_both", SuggestType.ALL);
         List<SuggestionEntity> infixBlendedSuggestions = response.getInfixBlended();
         assertThat(infixBlendedSuggestions, IsIterableContainingInOrder.contains(byWeightTerm1, byWeightTerm2,
                 byWeightTerm3, byWeightTerm4, byWeightTerm5, byWeightTerm6));

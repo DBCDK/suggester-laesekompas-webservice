@@ -2,14 +2,14 @@ package dk.dbc.laesekompas.suggester.webservice.solr;
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
- * This is part of microservice-sample
+ * This is part of suggester-laesekompas-webservice
  *
- * microservice-sample is free software: you can redistribute it and/or modify
+ * suggester-laesekompas-webservice is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * microservice-sample is distributed in the hope that it will be useful,
+ * suggester-laesekompas-webservice is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -47,11 +47,10 @@ public class SolrLaesekompasSuggester {
         this.solrClient = solrClient;
     }
 
-    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType, String appId) throws IOException, SolrServerException {
+    public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType) throws IOException, SolrServerException {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRequestHandler("/"+suggestType.getCollection()+"/suggest");
         solrQuery.setParam("suggest.q", query);
-        solrQuery.setParam("appId", appId);
         QueryResponse resp = solrClient.query(solrQuery);
         SuggesterResponse suggesterResponse = resp.getSuggesterResponse();
 
@@ -73,7 +72,6 @@ public class SolrLaesekompasSuggester {
                 } else if (se1.getWeight() > se2.getWeight()) {
                     return -1;
                 } else {
-                    // se1.getWeight() == se2.getWeight()
                     return se1.getMatchedTerm().compareTo(se2.getMatchedTerm());
                 }
             });
