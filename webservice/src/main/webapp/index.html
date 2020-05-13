@@ -40,9 +40,8 @@
     </p>
     <p>
         <kbd>branch_id</kbd> optional branch ID, filters so only results matching the query and exist on the given branch
-        are returned. As of now, only branches having materials on the bibliographic post that represents the work can
-        show up when filtering. This means that libraries having holdings of the same work, but not the exact books
-        that are indexed (representing the work) does not show up.
+        are returned. Note that the branch does not necessarily have a holding on the specific bibliographic record that
+        is returned but they will have a holding on some record in the work that is represented by the record returned.
     </p>
     <p>
         <kbd>filter_status</kbd> optional filter_status, filters so that only results matching the given filter status
