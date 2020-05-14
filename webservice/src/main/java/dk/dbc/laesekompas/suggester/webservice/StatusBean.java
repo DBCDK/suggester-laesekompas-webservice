@@ -26,6 +26,8 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.annotation.Timed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -46,6 +48,8 @@ import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.*;
 @Path("status")
 public class StatusBean {
     HttpSolrClient solr;
+    private static final Logger log = LoggerFactory.getLogger(StatusBean.class);
+
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String suggesterSolrUrl;
@@ -67,24 +71,26 @@ public class StatusBean {
     @Produces({MediaType.APPLICATION_JSON})
     @Timed
     public Response getStatus() {
+        log.info("StatusBean called...");
         try {
             solr.setBaseURL(suggesterSolrUrl+"/"+ ALL.getCollection());
-            checkPing();
+            checkPing("all");
             solr.setBaseURL(suggesterSolrUrl+"/"+ AUDIO_BOOK.getCollection());
-            checkPing();
+            checkPing("audio_book");
             solr.setBaseURL(suggesterSolrUrl+"/"+ E_BOOK.getCollection());
-            checkPing();
+            checkPing("e_book");
             solr.setBaseURL(suggesterSolrUrl+"/search");
-            checkPing();
+            checkPing("search");
             return Response.ok().entity(new Resp()).build();
         } catch (SolrServerException|IOException ex) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new Resp(ex.getMessage())).build();
         }
     }
 
-    private void checkPing() throws IOException, SolrServerException {
+    private void checkPing(String solrName) throws IOException, SolrServerException {
         SolrPingResponse ping = solr.ping();
         if (ping.getStatus() != 0) {
+            log.error("Error encountered when pinging solr: " + solrName);
             throw new SolrServerException(ping.getException().getMessage());
         }
     }
