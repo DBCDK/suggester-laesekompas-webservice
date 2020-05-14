@@ -71,7 +71,7 @@ public class StatusBean {
     @Produces({MediaType.APPLICATION_JSON})
     @Timed
     public Response getStatus() {
-        log.info("StatusBean called...");
+        log.debug("StatusBean called...");
         try {
             solr.setBaseURL(suggesterSolrUrl+"/"+ ALL.getCollection());
             checkPing("all");
