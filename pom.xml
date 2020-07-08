@@ -5,6 +5,13 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>dk.dbc</groupId>
+    <artifactId>microservice-pom</artifactId>
+    <version>latest-SNAPSHOT</version>
+    <relativePath/>
+  </parent>
+
   <!-- Basic information about this module -->
   <groupId>dk.dbc</groupId>
   <artifactId>suggester-laesekompas</artifactId>
