@@ -2,18 +2,19 @@
 def dockerRepository = 'https://docker-os.dbc.dk'
 
 if (env.BRANCH_NAME == 'master') {
-}
-properties([
-    pipelineTriggers([
-        triggers: [
-                    [
-                        $class: 'jenkins.triggers.ReverseBuildTrigger',
-                        upstreamProjects: "Docker-payara5-bump-trigger", threshold: hudson.model.Result.SUCCESS
+
+    properties([
+            pipelineTriggers([
+                    triggers: [
+                            [
+                                    $class          : 'jenkins.triggers.ReverseBuildTrigger',
+                                    upstreamProjects: "Docker-payara5-bump-trigger", threshold: hudson.model.Result.SUCCESS
+                            ]
                     ]
-                ]
-        ]
-    )
-])
+            ]
+            )
+    ])
+}
 pipeline {
     agent { label "devel10" }
     tools {
