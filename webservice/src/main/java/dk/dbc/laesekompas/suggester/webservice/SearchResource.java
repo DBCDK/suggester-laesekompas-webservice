@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.PreDestroy;
 
 @Stateless
 @Path("search")
@@ -107,6 +108,22 @@ public class SearchResource {
         }
         LOGGER.info("solrAppId: {}", solrAppId);
     }
+
+    @PreDestroy
+    void onDestroy(){
+        LOGGER.info("SOLR clients destroyed");
+        try {
+            laesekompasSolr.close();
+        } catch (IOException ex) {
+            LOGGER.warn("Unable to destroy Laesekompas SOLR client");
+        }
+        try {
+            corepoSolr.close();
+        } catch (IOException ex) {
+            LOGGER.warn("Unable to destroy Corepo SOLR client");
+        }
+    }
+
 
     private static SolrParams SolrSearchParams(SearchParams params) {
         HashMap<String, String> hm = new HashMap<String, String>() {{
