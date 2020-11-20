@@ -20,10 +20,8 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 30/04/2019
  */
 
-import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
@@ -34,8 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
-import javax.faces.model.SelectItem;
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -51,7 +49,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
-import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.*;
+import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.ALL;
+import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.AUDIO_BOOK;
+import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.E_BOOK;
 
 /**
  * Bean containing webservice status endpoint for monitoring purposes
@@ -89,6 +89,7 @@ public class StatusBean {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Timed
+    @SuppressWarnings("javadoc")
     public Response getStatus(@Context UriInfo uriInfo) {
         log.debug("StatusBean called...");
         try {
