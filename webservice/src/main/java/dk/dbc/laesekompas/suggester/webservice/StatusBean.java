@@ -20,7 +20,10 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 30/04/2019
  */
 
+import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
@@ -31,13 +34,22 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
+import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
+import java.net.URI;
+import java.util.List;
 
 import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.*;
 
@@ -48,11 +60,17 @@ import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.*;
 @Path("status")
 public class StatusBean {
     HttpSolrClient solr;
+    Client client;
+    WebTarget target;
     private static final Logger log = LoggerFactory.getLogger(StatusBean.class);
 
     @Inject
     @ConfigProperty(name = "SUGGESTER_SOLR_URL")
     String suggesterSolrUrl;
+
+    @Inject
+    @ConfigProperty(name = "COREPO_SOLR_URL")
+    String corepoSolrUrl;
 
     @PostConstruct
     public void initialize() {
@@ -60,6 +78,7 @@ public class StatusBean {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
+        this.client = ClientBuilder.newClient();
     }
 
     /**
@@ -70,7 +89,7 @@ public class StatusBean {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Timed
-    public Response getStatus() {
+    public Response getStatus(@Context UriInfo uriInfo) {
         log.debug("StatusBean called...");
         try {
             solr.setBaseURL(suggesterSolrUrl+"/"+ ALL.getCollection());
@@ -81,6 +100,24 @@ public class StatusBean {
             checkPing("e_book");
             solr.setBaseURL(suggesterSolrUrl+"/search");
             checkPing("search");
+            solr.setBaseURL(corepoSolrUrl+"/solr/cisterne-laesekompas-suggester-lookup");
+            checkPing("corepo-solr");
+            URI uri = uriInfo.getBaseUriBuilder()
+                    .path("search")
+                    .queryParam("query","eventyr")
+                    .build();
+            this.target = client.target(uri);
+            Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
+            if (response.getStatus() != HttpStatus.SC_OK) {
+                log.error("Læsekompas calling itself went bad!");
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new Resp("Laesekompas self call went bad")).build();
+            }
+            List<Object> entityList = response.readEntity(new GenericType<List<Object>>() {});
+            if (entityList == null || entityList.size() == 0) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new Resp("Laesekompas self call did not return data")).build();
+            }
             return Response.ok().entity(new Resp()).build();
         } catch (SolrServerException|IOException ex) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new Resp(ex.getMessage())).build();
