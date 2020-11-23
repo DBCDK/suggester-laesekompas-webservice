@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import javax.annotation.PreDestroy;
 
 @Stateless
 @Path("suggest")
@@ -77,8 +78,19 @@ public class SuggestResource {
         if(!this.suggesterSolrUrl.endsWith("/solr")) {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
+        LOGGER.info("config/suggester SolR URL: {}", suggesterSolrUrl);
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
         this.suggester = new SolrLaesekompasSuggester(this.solr);
+    }
+
+    @PreDestroy
+    void onDestroy(){
+        LOGGER.info("SOLR client destroyed");
+        try {
+            solr.close();
+        } catch (IOException ex) {
+            LOGGER.warn("Unable to destroy SOLR client");
+        }
     }
 
     private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {
