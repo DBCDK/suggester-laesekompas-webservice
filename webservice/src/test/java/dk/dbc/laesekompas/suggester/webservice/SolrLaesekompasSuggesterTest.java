@@ -41,7 +41,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class SolrLaesekompasSuggesterTest {
     private static SolrLaesekompasSuggester solrLaesekompasSuggester;
