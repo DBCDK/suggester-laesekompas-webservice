@@ -32,16 +32,20 @@ import org.apache.solr.common.params.MapSolrParams;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class SearchResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
@@ -276,7 +280,7 @@ public class SearchResourceTest {
         Response response = searchResource.search("merge #rows", "", false, true, rows, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
-        assertEquals(result.size(), rows);
+        assertThat(result.size(), is(equalTo(rows)));
     }
 
     @Test
@@ -287,7 +291,7 @@ public class SearchResourceTest {
 
         // Test that the test is essentially testing what it is supposed to
         assert(testMergeWorkIDFewRowsDocs.size() < rows);
-        assertEquals(result.size(), testMergeWorkIDFewRowsDocs.size());
+        assertThat(result.size(), is(equalTo(testMergeWorkIDFewRowsDocs.size())));
     }
 
     @Test

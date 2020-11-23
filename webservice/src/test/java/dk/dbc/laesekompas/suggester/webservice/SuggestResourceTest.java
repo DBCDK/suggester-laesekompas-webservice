@@ -33,8 +33,6 @@ import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -42,13 +40,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.eq;
 
 public class SuggestResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
-    private static final Logger log = LoggerFactory.getLogger(SuggestResourceTest.class);
     private SuggestResource suggestResource;
 
     @Before
@@ -78,19 +76,19 @@ public class SuggestResourceTest {
     @Test
     public void suggestAllQueryRequireQuery() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAll(null);
-        assertEquals(400,response.getStatus());
+        assertThat(400, is(equalTo(response.getStatus())));
     }
 
     @Test
     public void suggestEBookQueryRequireQuery() throws IOException, SolrServerException {
         Response response = suggestResource.suggestEBooks(null);
-        assertEquals(400,response.getStatus());
+        assertThat(400, is(equalTo(response.getStatus())));
     }
 
     @Test
     public void suggestAudioBookQueryRequireQuery() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAudioBooks(null);
-        assertEquals(400,response.getStatus());
+        assertThat(400, is(equalTo(response.getStatus())));
     }
 
     @Test
@@ -232,21 +230,21 @@ public class SuggestResourceTest {
     public void suggestAllQueryMaxNumberSuggestions() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAll("test_max_suggestions");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(result.size(), MAX_SUGGESTIONS);
+        assertThat(result.size(), is(equalTo(MAX_SUGGESTIONS)));
     }
 
     @Test
     public void suggestEBookQueryMaxNumberSuggestions() throws IOException, SolrServerException {
         Response response = suggestResource.suggestEBooks("test_max_suggestions");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(result.size(), MAX_SUGGESTIONS);
+        assertThat(result.size(), is(equalTo(MAX_SUGGESTIONS)));
     }
 
     @Test
     public void suggestAudioBookQueryMaxNumberSuggestions() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAudioBooks("test_max_suggestions");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(result.size(), MAX_SUGGESTIONS);
+        assertThat(result.size(), is(equalTo(MAX_SUGGESTIONS)));
     }
 
     // TEST SOLR CLIENT RESPONSE DATA

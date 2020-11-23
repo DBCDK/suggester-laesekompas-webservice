@@ -24,7 +24,7 @@ docker build -t laesekompas-webservice -f target/docker/Dockerfile .
 When the docker image is built, you can run it with a command looking like the following. Feel free to alter environments as you see fit. Most of the environment variables here are documented in ```Dockerfile```, the rest only control how much output is written to the console, and how it is formatted.
 
 ```bash
-docker run -it -e JAVA_MAX_HEAP_SIZE=1G -e LOG_FORMAT=text -e SUGGESTER_SOLR_URL=http://laesekompas-suggester-laesekompas-solr-3-service.os-externals-staging.svc.cloud.dbc.dk:8983 -e SOLR_APPID=nots-laptop-laesekompas-solr-appId -e COREPO_SOLR_URL=http://cisterne-solr.dbc.dk:8986/ -e LOG_LEVEL=debug -p 8080:8080 laesekompas-webservice
+docker run -it -e JAVA_MAX_HEAP_SIZE=1G -e LOG_FORMAT=text -e COREPO_SOLR_URL=http://cisterne.solr.dbc.dk:8983/ -e SUGGESTER_SOLR_URL=http://laesekompas-suggester-laesekompas-solr-3-service.os-externals-staging.svc.cloud.dbc.dk:8983 -e SOLR_APPID=laesekompas-solr-appId  -e LOG_LEVEL=debug -p 8080:8080 laesekompas-webservice
 ```
 
 ### Calling the web service

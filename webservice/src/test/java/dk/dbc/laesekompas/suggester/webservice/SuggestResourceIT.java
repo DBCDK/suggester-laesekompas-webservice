@@ -34,10 +34,12 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 public class SuggestResourceIT {
     private static final Logger log = LoggerFactory.getLogger(SuggestResourceIT.class);
@@ -67,20 +69,20 @@ public class SuggestResourceIT {
     public void suggestQueryAllEmptyShouldNotFail() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAll("something from empty index");
         List<SuggestionEntity> suggestions = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(suggestions.size(), 0);
+        assertThat(suggestions.size(), is(equalTo(0)));
     }
 
     @Test
     public void suggestQueryEBookEmptyShouldNotFail() throws IOException, SolrServerException {
         Response response = suggestResource.suggestEBooks("something from empty index");
         List<SuggestionEntity> suggestions = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(suggestions.size(), 0);
+        assertThat(suggestions.size(), is(equalTo(0)));
     }
     @Test
     public void suggestQueryAudioBookEmptyShouldNotFail() throws IOException, SolrServerException {
         Response response = suggestResource.suggestAudioBooks("something from empty index");
         List<SuggestionEntity> suggestions = (List<SuggestionEntity>) response.getEntity();
-        assertEquals(suggestions.size(), 0);
+        assertThat(suggestions.size(), is(equalTo(0)));
     }
 
     @Test
