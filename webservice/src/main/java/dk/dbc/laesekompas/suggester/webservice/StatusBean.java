@@ -83,12 +83,12 @@ public class StatusBean {
     /**
      * Status endpoint for monitoring, pings all SolR collections used for making search/suggest, if not all are healthy
      * returns status code 500
+     * @param uriInfo from context
      * @return Response: json object {success: true/false, message: "Error message/success"}
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Timed
-    @SuppressWarnings("javadoc")
     public Response getStatus(@Context UriInfo uriInfo) {
         log.debug("StatusBean called...");
         try {
