@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -60,6 +61,16 @@ public class StatusBean {
             this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
         }
         this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
+    }
+
+    @PreDestroy
+    void onDestroy(){
+        log.info("SOLR client destroyed");
+        try {
+            solr.close();
+        } catch (IOException ex) {
+            log.warn("Unable to destroy SOLR client");
+        }
     }
 
     /**
