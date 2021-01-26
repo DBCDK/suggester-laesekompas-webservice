@@ -60,6 +60,7 @@ public class SearchResource {
     public static final String COREPO_SOLR_TEXT_QUERY = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf";
     public static final String COREPO_SOLR_TEXT_QUERY_PARENS = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:(%s) AND holdingsitem.status:OnShelf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
+    private static final int bibIdsPerSolrQuery = 300;
 
     @Inject
     SolrBean solrBean;
@@ -118,8 +119,8 @@ public class SearchResource {
         return new MapSolrParams(hm);
     }
 
-    private static SolrQuery onShelfLookupQuery(String agencyId, String bibId, String solrAppId) {
-        String query = String.format(COREPO_SOLR_TEXT_QUERY, agencyId, bibId);
+    private static SolrQuery onShelfQuery(String agencyId, String solrAppId, List<String> bibIds) {
+        String query = String.format(COREPO_SOLR_TEXT_QUERY_PARENS, agencyId, String.join(" OR ", bibIds));
         SolrQuery res = new SolrQuery();
         res.setParam(CommonParams.Q, query);
         res.setParam(CommonParams.ROWS, "0");
@@ -226,11 +227,15 @@ public class SearchResource {
         // ranked. Regardless if both are or aren't A-posts, we continue with prioritizing books and the
         // highest ranked
         if (se1.getAPost() != se2.getAPost()) {
-            if(se1.getAPost()) return se1; else return se2;
+            return se1.getAPost() ? se1 : se2;
         } else if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
             return se1.getOrder() < se2.getOrder() ? se1 : se2;
-        } else if (se1.getType() == SearchEntityType.BOOK) return se1;
-        else if (se2.getType() == SearchEntityType.BOOK) return se2;
+        } else if (se1.getType() == SearchEntityType.BOOK) {
+            return se1;
+        }
+        else if (se2.getType() == SearchEntityType.BOOK) {
+            return se2;
+        }
         else {
             // Order assignment is strictly increasing, which why they can never be equal
             return se1.getOrder() < se2.getOrder() ? se1 : se2;
@@ -239,17 +244,24 @@ public class SearchResource {
 
     private static boolean hasItemOnShelf(SearchEntity searchEntity, HttpSolrClient corepoSolr, String agencyId, String solrAppId) {
         // Checks if any of the items in the work have an OnShelf status
-        return searchEntity.getBibIdsInWork().stream()
-                .anyMatch(b -> {
-                    try {
-                        QueryResponse response = corepoSolr.query(onShelfLookupQuery(agencyId, b, solrAppId));
-                        return response != null && response.getResults().getNumFound() > 1;
-                    } catch (IOException | SolrServerException e) {
-                        LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, b);
-                        LOGGER.error("{}", e);
-                        throw new RuntimeException("Failed talking to corepo SolR");
-                    }
-                });
+        List<String> bibIdsInWork = searchEntity.getBibIdsInWork();
+        List<List<String>> bibIdPartitions = new ArrayList<>();
+        for (int i = 0; i < bibIdsInWork.size(); i += bibIdsPerSolrQuery) {
+            bibIdPartitions.add(bibIdsInWork.subList(i, Math.min(i + bibIdsPerSolrQuery, bibIdsInWork.size())));
+        }
+        for (List<String> bibIdPartition : bibIdPartitions) {
+            try {
+                QueryResponse response = corepoSolr.query(onShelfQuery(agencyId, solrAppId, bibIdPartition));
+                if (response != null && response.getResults().getNumFound() > 1) {
+                    return true;
+                }
+            } catch (IOException | SolrServerException e) {
+                LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, String.join(",", bibIdPartition));
+                LOGGER.error("{}", e);
+                throw new RuntimeException("Failed talking to corepo SolR");
+            }
+        }
+        return false;
     }
 
     // POJO to pass 4 arguments to solr params function
