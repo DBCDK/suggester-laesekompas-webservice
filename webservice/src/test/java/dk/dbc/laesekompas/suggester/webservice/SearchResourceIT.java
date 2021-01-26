@@ -23,7 +23,6 @@ package dk.dbc.laesekompas.suggester.webservice;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,15 +39,17 @@ public class SearchResourceIT {
     private static final Logger log = LoggerFactory.getLogger(SearchResourceIT.class);
     SearchResource searchResource;
     SolrClient solrClient;
+    SolrBean solrBean;
 
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
-        String laesekompasSolRUrl = System.getProperty("laesekompas.solr.url");
+        solrBean = new SolrBean();
+        solrBean.laesekompasSolrUrl = System.getProperty("laesekompas.solr.url");
+        solrBean.initialize();
+        searchResource.solrBean = solrBean;
 
-        searchResource.initialize();
-
-        solrClient = new HttpSolrClient.Builder(laesekompasSolRUrl).build();
+        solrClient = solrBean.getLaesekompasSolr();
         solrClient.deleteByQuery("search", "*:*");
         solrClient.commit("search");
     }

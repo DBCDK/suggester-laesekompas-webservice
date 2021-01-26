@@ -59,6 +59,9 @@ public class SolrBean {
         }
         log.info("config/laesekompas SolR URL: {}", laesekompasSolrUrl);
         this.laesekompasSolr = new HttpSolrClient.Builder(laesekompasSolrUrl).build();
+        if (this.corepoSolrUrl == null) {
+            this.corepoSolrUrl = "";
+        }
         if(!this.corepoSolrUrl.endsWith("/solr")) {
             this.corepoSolrUrl = this.corepoSolrUrl +"/solr";
         }
