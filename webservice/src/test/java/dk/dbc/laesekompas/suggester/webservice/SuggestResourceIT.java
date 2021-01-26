@@ -44,15 +44,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SuggestResourceIT {
     private static final Logger log = LoggerFactory.getLogger(SuggestResourceIT.class);
     SuggestResource suggestResource;
+    SolrBean solrBean;
     SolrClient solrClient;
 
     @Before
     public void setupBean() throws IOException, SolrServerException {
         suggestResource = new SuggestResource();
-        String solrUrl = System.getProperty("suggester.solr.url");
+        solrBean = new SolrBean();
+        String solrUrl = System.getProperty("laesekompas.solr.url");
 
-        suggestResource.suggesterSolrUrl = solrUrl;
-        log.info("We have the SolR suggester URL: {}", suggestResource.suggesterSolrUrl);
+        solrBean.laesekompasSolrUrl = solrUrl;
+        log.info("We have the SolR suggester URL: {}", solrBean.laesekompasSolrUrl);
         suggestResource.maxNumberSuggestions = 10;
         suggestResource.initialize();
 

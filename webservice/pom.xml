@@ -194,7 +194,7 @@
         </executions>
         <configuration>
           <systemPropertyVariables>
-            <suggester.solr.url>http://${docker.host.address}:${suggest.solr.host.port}/solr</suggester.solr.url>
+            <laesekompas.solr.url>http://${docker.host.address}:${suggest.solr.host.port}/solr</laesekompas.solr.url>
             <corepo.solr.url>http://cisterne-solr.dbc.dk:8986/solr</corepo.solr.url>
           </systemPropertyVariables>
         </configuration>

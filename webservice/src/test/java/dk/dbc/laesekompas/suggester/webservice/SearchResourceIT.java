@@ -24,7 +24,6 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,14 +44,8 @@ public class SearchResourceIT {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
-        String laesekompasSolRUrl = System.getProperty("suggester.solr.url");
-        String corepoSolrUrl = System.getProperty("corepo.solr.url");
+        String laesekompasSolRUrl = System.getProperty("laesekompas.solr.url");
 
-        searchResource.searchSolrUrl = laesekompasSolRUrl;
-        searchResource.corepoSolrUrl = corepoSolrUrl;
-        log.info("We have the SolR suggester URL: {}", searchResource.searchSolrUrl);
-        log.info("We have the Corepo suggester URL: {}", searchResource.corepoSolrUrl);
-        searchResource.maxNumberSuggestions = 10;
         searchResource.initialize();
 
         solrClient = new HttpSolrClient.Builder(laesekompasSolRUrl).build();

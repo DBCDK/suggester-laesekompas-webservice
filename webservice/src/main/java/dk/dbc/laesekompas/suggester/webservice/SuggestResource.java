@@ -28,13 +28,13 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -47,22 +47,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import javax.annotation.PreDestroy;
 
 @Stateless
 @Path("suggest")
 public class SuggestResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SuggestResource.class);
-    HttpSolrClient solr;
     SolrLaesekompasSuggester suggester;
 
-    /**
-     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
-     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
-     */
     @Inject
-    @ConfigProperty(name = "SUGGESTER_SOLR_URL")
-    String suggesterSolrUrl;
+    SolrBean solrBean;
 
     /**
      * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
@@ -75,22 +68,15 @@ public class SuggestResource {
 
     @PostConstruct
     public void initialize() {
-        if(!this.suggesterSolrUrl.endsWith("/solr")) {
-            this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
+        if (solrBean == null || solrBean.getLaesekompasSolr() == null) {
+            throw new RuntimeException("Configuration stuff - WRONG!");
         }
-        LOGGER.info("config/suggester SolR URL: {}", suggesterSolrUrl);
-        this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
-        this.suggester = new SolrLaesekompasSuggester(this.solr);
+        this.suggester = new SolrLaesekompasSuggester(solrBean.getLaesekompasSolr());
     }
 
     @PreDestroy
     void onDestroy(){
-        LOGGER.info("SOLR client destroyed");
-        try {
-            solr.close();
-        } catch (IOException ex) {
-            LOGGER.warn("Unable to destroy SOLR client");
-        }
+        LOGGER.info("SuggestResource destroyed");
     }
 
     private Response suggest(SuggestType suggestType, String query) throws SolrServerException, IOException {

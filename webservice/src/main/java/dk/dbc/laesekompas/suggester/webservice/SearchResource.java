@@ -35,42 +35,34 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.annotation.PreDestroy;
 
 @Stateless
 @Path("search")
 public class SearchResource {
     public static final String SOLR_FULL_TEXT_QUERY = "author^6.0 title^5.0 all abstract";
     public static final String COREPO_SOLR_TEXT_QUERY = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:\"%s\" AND holdingsitem.status:OnShelf";
+    public static final String COREPO_SOLR_TEXT_QUERY_PARENS = "holdingsitem.agencyId:%s AND holdingsitem.bibliographicRecordId:(%s) AND holdingsitem.status:OnShelf";
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchResource.class);
-    HttpSolrClient laesekompasSolr;
-    HttpSolrClient corepoSolr;
 
-    /**
-     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
-     * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
-     */
     @Inject
-    @ConfigProperty(name = "SUGGESTER_SOLR_URL")
-    String searchSolrUrl;
-
-    /**
-     * COPREPO_SOLR_URL is the URL for the corepo solr url
-     */
-    @Inject
-    @ConfigProperty(name = "COREPO_SOLR_URL")
-    String corepoSolrUrl;
+    SolrBean solrBean;
 
     /**
      * SOLR_APPID is the Application ID that we send to Solr for tracing purposes.
@@ -79,30 +71,9 @@ public class SearchResource {
     @ConfigProperty(name = "SOLR_APPID")
     String solrAppId;
 
-    /**
-     * MAX_NUMBER_SUGGESTIONS is the maximum number of suggestion that should be returned by all suggest endpoints.
-     * Should match the number of suggestions given by the suggestion SolR, a parameter that is statically configured
-     * on the SolR.
-     */
-    @Inject
-    @ConfigProperty(name = "MAX_NUMBER_SUGGESTIONS", defaultValue = "10")
-    Integer maxNumberSuggestions;
 
     @PostConstruct
     public void initialize() {
-        if(!this.searchSolrUrl.endsWith("/solr")) {
-            this.searchSolrUrl = this.searchSolrUrl +"/solr";
-        }
-        LOGGER.info("config/laesekompas SolR URL: {}", searchSolrUrl);
-        this.laesekompasSolr = new HttpSolrClient.Builder(searchSolrUrl).build();
-        if(!this.corepoSolrUrl.endsWith("/solr")) {
-            this.corepoSolrUrl = this.corepoSolrUrl +"/solr";
-        }
-        // Appending alias for our specific application
-        this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
-        LOGGER.info("config/corepo SolR URL: {}", corepoSolrUrl);
-        this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
-        LOGGER.info("config/MAX_NUMBER_SUGGESTIONS: {}", maxNumberSuggestions);
         if (solrAppId == null) {
             solrAppId = "";
         }
@@ -111,17 +82,7 @@ public class SearchResource {
 
     @PreDestroy
     void onDestroy(){
-        LOGGER.info("SOLR clients destroyed");
-        try {
-            laesekompasSolr.close();
-        } catch (IOException ex) {
-            LOGGER.warn("Unable to destroy Laesekompas SOLR client");
-        }
-        try {
-            corepoSolr.close();
-        } catch (IOException ex) {
-            LOGGER.warn("Unable to destroy Corepo SOLR client");
-        }
+        LOGGER.info("SearchResource destroyed");
     }
 
 
@@ -219,7 +180,7 @@ public class SearchResource {
         while (searchResults.size() < rows && !solrSearchResultEnd) {
             // Asks for x3 rows when merging workID's, since a work can potentially have 3 manifestations
             SolrParams params = SolrSearchParams(new SearchParams(query, field, exact, rows * (mergeWorkID ? 3 : 1), branchId, solrSearchIndex));
-            QueryResponse solrResponse = laesekompasSolr.query("search", params);
+            QueryResponse solrResponse = solrBean.getLaesekompasSolr().query("search", params);
 
             // If we have paged past the number of total results in SolR, we are at the end
             solrSearchResultEnd = (solrSearchIndex+rows) >= (solrResponse.getResults().getNumFound());
@@ -233,23 +194,7 @@ public class SearchResource {
                 LOGGER.debug("filtering...");
                 String agencyId = branchId.substring(0, 6);
                 filtered_buffer = buffer.stream()
-                        .filter(searchEntity -> {
-                            // Checks if any of the items in the work have an OnShelf status
-                            return searchEntity.getBibIdsInWork().stream()
-                                    .map(bibId -> {
-                                        try {
-                                            SolrQuery solrQuery = onShelfLookupQuery(agencyId, bibId, solrAppId);
-                                            QueryResponse response = corepoSolr.query(solrQuery);
-                                            return response != null && response.getResults().getNumFound() > 1;
-                                        } catch (IOException | SolrServerException e) {
-                                            LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, bibId);
-                                            LOGGER.error("{}", e);
-                                            throw new RuntimeException("Failed talking to corepo SolR");
-                                        }
-                                    })
-                                    // Only one of the bibliographic items needs to be `OnShelf` ie. is true
-                                    .reduce(false, Boolean::logicalOr);
-                        })
+                        .filter(searchEntity -> hasItemOnShelf(searchEntity, solrBean.getCorepoSolr(), agencyId, solrAppId))
                         .collect(Collectors.toList());
             } else {
                 filtered_buffer = buffer;
@@ -261,26 +206,12 @@ public class SearchResource {
         if (mergeWorkID) {
             HashMap<String, SearchEntity> duplicateRemover = new HashMap<>();
             for (SearchEntity searchEntity : searchResults) {
-                duplicateRemover.merge(searchEntity.getWorkid(), searchEntity, (se1, se2) -> {
-                    // When selecting a document to represent the work, we prefer A-posts, then books, then the highest
-                    // ranked. Regardless if both are or aren't A-posts, we continue with prioritizing books and the
-                    // highest ranked
-                    if (se1.getAPost() != se2.getAPost()) {
-                        if(se1.getAPost()) return se1; else return se2;
-                    } else if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
-                        return se1.getOrder() < se2.getOrder() ? se1 : se2;
-                    } else if (se1.getType() == SearchEntityType.BOOK) return se1;
-                    else if (se2.getType() == SearchEntityType.BOOK) return se2;
-                    else {
-                        // Order assignment is strictly increasing, which why they can never be equal
-                        return se1.getOrder() < se2.getOrder() ? se1 : se2;
-                    }
-                });
+                duplicateRemover.merge(searchEntity.getWorkid(), searchEntity, SearchResource::mergeSearchEntities);
             }
             // Sort merged works according to order to achieve the final result
             searchResults = duplicateRemover.values().parallelStream()
                     // Order integers are never the same
-                    .sorted((a,b) -> a.getOrder() > b.getOrder() ? 1 : -1)
+                    .sorted(Comparator.comparing(SearchEntity::getOrder))
                     .collect(Collectors.toList());
         }
         MDC.clear();
@@ -288,6 +219,37 @@ public class SearchResource {
         // results, which is why we create the sublist. We might also have less than 'rows' results if the SolR search
         // did not return 'rows' results, which we must account for
         return Response.ok().entity(searchResults.subList(0, Integer.min(rows, searchResults.size()))).build();
+    }
+
+    private static SearchEntity mergeSearchEntities(SearchEntity se1, SearchEntity se2) {
+        // When selecting a document to represent the work, we prefer A-posts, then books, then the highest
+        // ranked. Regardless if both are or aren't A-posts, we continue with prioritizing books and the
+        // highest ranked
+        if (se1.getAPost() != se2.getAPost()) {
+            if(se1.getAPost()) return se1; else return se2;
+        } else if(se1.getType() == SearchEntityType.BOOK && se2.getType() == SearchEntityType.BOOK) {
+            return se1.getOrder() < se2.getOrder() ? se1 : se2;
+        } else if (se1.getType() == SearchEntityType.BOOK) return se1;
+        else if (se2.getType() == SearchEntityType.BOOK) return se2;
+        else {
+            // Order assignment is strictly increasing, which why they can never be equal
+            return se1.getOrder() < se2.getOrder() ? se1 : se2;
+        }
+    }
+
+    private static boolean hasItemOnShelf(SearchEntity searchEntity, HttpSolrClient corepoSolr, String agencyId, String solrAppId) {
+        // Checks if any of the items in the work have an OnShelf status
+        return searchEntity.getBibIdsInWork().stream()
+                .anyMatch(b -> {
+                    try {
+                        QueryResponse response = corepoSolr.query(onShelfLookupQuery(agencyId, b, solrAppId));
+                        return response != null && response.getResults().getNumFound() > 1;
+                    } catch (IOException | SolrServerException e) {
+                        LOGGER.error("Failed talking to corepo SolR by looking up: {}/{}", agencyId, b);
+                        LOGGER.error("{}", e);
+                        throw new RuntimeException("Failed talking to corepo SolR");
+                    }
+                });
     }
 
     // POJO to pass 4 arguments to solr params function

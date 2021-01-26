@@ -52,7 +52,7 @@ public class SolrProxyBeanIT {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         solrProxyBean = new SolrProxyBean();
-        String solrUrl = System.getProperty("suggester.solr.url");
+        String solrUrl = System.getProperty("laesekompas.solr.url");
 
         solrProxyBean.solrUrl = solrUrl;
         log.info("We have the SolR suggester URL: {}", solrProxyBean.solrUrl);

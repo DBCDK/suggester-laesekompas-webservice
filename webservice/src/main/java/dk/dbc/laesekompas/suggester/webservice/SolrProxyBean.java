@@ -46,11 +46,11 @@ import java.util.Map;
 public class SolrProxyBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(SolrProxyBean.class);
     /**
-     * SUGGESTER_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
+     * LAESEKOMPAS_SOLR_URL is the URL for the suggestion SolR that this webservice uses. This service is heavily coupled
      * with this SolRs interface, see https://gitlab.dbc.dk/os-scrum/suggester-laesekompas-solr for exact SolR config
      */
     @Inject
-    @ConfigProperty(name = "SUGGESTER_SOLR_URL")
+    @ConfigProperty(name = "LAESEKOMPAS_SOLR_URL")
     String solrUrl;
 
     Client client;
