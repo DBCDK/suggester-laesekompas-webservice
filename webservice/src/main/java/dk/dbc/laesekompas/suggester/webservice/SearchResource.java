@@ -232,11 +232,9 @@ public class SearchResource {
             return se1.getOrder() < se2.getOrder() ? se1 : se2;
         } else if (se1.getType() == SearchEntityType.BOOK) {
             return se1;
-        }
-        else if (se2.getType() == SearchEntityType.BOOK) {
+        } else if (se2.getType() == SearchEntityType.BOOK) {
             return se2;
-        }
-        else {
+        } else {
             // Order assignment is strictly increasing, which why they can never be equal
             return se1.getOrder() < se2.getOrder() ? se1 : se2;
         }
@@ -246,8 +244,8 @@ public class SearchResource {
         // Checks if any of the items in the work have an OnShelf status
         List<String> bibIdsInWork = searchEntity.getBibIdsInWork();
         List<List<String>> bibIdPartitions = new ArrayList<>();
-        for (int i = 0; i < bibIdsInWork.size(); i += bibIdsPerSolrQuery) {
-            bibIdPartitions.add(bibIdsInWork.subList(i, Math.min(i + bibIdsPerSolrQuery, bibIdsInWork.size())));
+        for (int offset = 0; offset < bibIdsInWork.size(); offset += bibIdsPerSolrQuery) {
+            bibIdPartitions.add(bibIdsInWork.subList(offset, Math.min(offset + bibIdsPerSolrQuery, bibIdsInWork.size())));
         }
         for (List<String> bibIdPartition : bibIdPartitions) {
             try {

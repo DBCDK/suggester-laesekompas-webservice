@@ -27,10 +27,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 
 @Singleton
+@Lock(LockType.READ)
 public class SolrBean {
     private final static Logger log = LoggerFactory.getLogger(SolrBean.class);
 
