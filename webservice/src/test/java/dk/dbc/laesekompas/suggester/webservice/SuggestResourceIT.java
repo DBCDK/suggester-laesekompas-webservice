@@ -24,7 +24,6 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntit
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,29 +33,33 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.CoreMatchers.equalTo;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 
 
 public class SuggestResourceIT {
     private static final Logger log = LoggerFactory.getLogger(SuggestResourceIT.class);
     SuggestResource suggestResource;
+    SolrBean solrBean;
     SolrClient solrClient;
 
     @Before
     public void setupBean() throws IOException, SolrServerException {
         suggestResource = new SuggestResource();
-        String solrUrl = System.getProperty("suggester.solr.url");
+        solrBean = new SolrBean();
+        suggestResource.solrBean = solrBean;
+        String solrUrl = System.getProperty("laesekompas.solr.url");
 
-        suggestResource.suggesterSolrUrl = solrUrl;
-        log.info("We have the SolR suggester URL: {}", suggestResource.suggesterSolrUrl);
+        solrBean.laesekompasSolrUrl = solrUrl;
+        solrBean.initialize();
+        log.info("We have the SolR suggester URL: {}", solrBean.laesekompasSolrUrl);
         suggestResource.maxNumberSuggestions = 10;
         suggestResource.initialize();
 
-        solrClient = new HttpSolrClient.Builder(solrUrl).build();
+        solrClient = solrBean.getLaesekompasSolr();
         solrClient.deleteByQuery("suggest-all", "*:*");
         solrClient.commit("suggest-all");
         solrClient.deleteByQuery("suggest-audio_book", "*:*");

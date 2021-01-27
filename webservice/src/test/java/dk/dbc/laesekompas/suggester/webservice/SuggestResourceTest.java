@@ -52,8 +52,9 @@ public class SuggestResourceTest {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         suggestResource = new SuggestResource();
+        SolrBean solrBean = new SolrBean();
+        suggestResource.solrBean = solrBean;
 
-        suggestResource.suggesterSolrUrl = "http://invalid.invalid";
         HttpSolrClient solr = Mockito.mock(HttpSolrClient.class);
         SolrLaesekompasSuggester suggester = Mockito.mock(SolrLaesekompasSuggester.class);
         Mockito.when(suggester.suggestQuery(eq("test"), Mockito.any(SuggestType.class)))
@@ -68,7 +69,7 @@ public class SuggestResourceTest {
                 .thenReturn(testRemoveDuplicateTag);
         Mockito.when(suggester.suggestQuery(eq("test_max_suggestions"), Mockito.any(SuggestType.class)))
                 .thenReturn(testMaxSuggestions);
-        suggestResource.solr = solr;
+        solrBean.laesekompasSolr = solr;
         suggestResource.suggester = suggester;
         suggestResource.maxNumberSuggestions = MAX_SUGGESTIONS;
     }

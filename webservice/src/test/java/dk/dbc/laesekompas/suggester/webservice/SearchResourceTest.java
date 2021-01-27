@@ -51,13 +51,14 @@ public class SearchResourceTest {
     private static final int MAX_SUGGESTIONS = 4;
     private static final Logger log = LoggerFactory.getLogger(SearchResourceTest.class);
     private SearchResource searchResource;
+    private SolrBean solrBean;
 
     @Before
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
+        solrBean = new SolrBean();
+        searchResource.solrBean = solrBean;
 
-        searchResource.searchSolrUrl = "http://invalid.invalid";
-        searchResource.corepoSolrUrl = "http://invalid2.invalid";
         // Mocking basic test, shows results as given by SolR
         Mockito.when(testLaesekompasSolrResponse.getResults()).thenReturn(testDocs);
         Mockito.when(
@@ -220,9 +221,8 @@ public class SearchResourceTest {
                         }})))
                 )
         ).thenReturn(testCorepoSolrResponse);
-        searchResource.laesekompasSolr = laesekompasSolr;
-        searchResource.corepoSolr = corepoSolr;
-        searchResource.maxNumberSuggestions = MAX_SUGGESTIONS;
+        solrBean.laesekompasSolr = laesekompasSolr;
+        solrBean.corepoSolr = laesekompasSolr;
     }
 
     @Test

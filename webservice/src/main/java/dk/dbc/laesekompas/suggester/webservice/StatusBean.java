@@ -65,8 +65,8 @@ public class StatusBean {
     private static final Logger log = LoggerFactory.getLogger(StatusBean.class);
 
     @Inject
-    @ConfigProperty(name = "SUGGESTER_SOLR_URL")
-    String suggesterSolrUrl;
+    @ConfigProperty(name = "LAESEKOMPAS_SOLR_URL")
+    String laesekompasSolrUrl;
 
     @Inject
     @ConfigProperty(name = "COREPO_SOLR_URL")
@@ -74,10 +74,10 @@ public class StatusBean {
 
     @PostConstruct
     public void initialize() {
-        if(!this.suggesterSolrUrl.endsWith("/solr")) {
-            this.suggesterSolrUrl = this.suggesterSolrUrl+"/solr";
+        if(!this.laesekompasSolrUrl.endsWith("/solr")) {
+            this.laesekompasSolrUrl = this.laesekompasSolrUrl +"/solr";
         }
-        this.solr = new HttpSolrClient.Builder(suggesterSolrUrl).build();
+        this.solr = new HttpSolrClient.Builder(laesekompasSolrUrl).build();
         this.client = ClientBuilder.newClient();
     }
 
@@ -103,13 +103,13 @@ public class StatusBean {
     public Response getStatus(@Context UriInfo uriInfo) {
         log.debug("StatusBean called...");
         try {
-            solr.setBaseURL(suggesterSolrUrl+"/"+ ALL.getCollection());
+            solr.setBaseURL(laesekompasSolrUrl +"/"+ ALL.getCollection());
             checkPing("all");
-            solr.setBaseURL(suggesterSolrUrl+"/"+ AUDIO_BOOK.getCollection());
+            solr.setBaseURL(laesekompasSolrUrl +"/"+ AUDIO_BOOK.getCollection());
             checkPing("audio_book");
-            solr.setBaseURL(suggesterSolrUrl+"/"+ E_BOOK.getCollection());
+            solr.setBaseURL(laesekompasSolrUrl +"/"+ E_BOOK.getCollection());
             checkPing("e_book");
-            solr.setBaseURL(suggesterSolrUrl+"/search");
+            solr.setBaseURL(laesekompasSolrUrl +"/search");
             checkPing("search");
             solr.setBaseURL(corepoSolrUrl+"/solr/cisterne-laesekompas-suggester-lookup");
             checkPing("corepo-solr");
