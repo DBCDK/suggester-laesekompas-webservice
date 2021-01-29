@@ -44,9 +44,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 
 import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.ALL;
@@ -113,28 +115,64 @@ public class StatusBean {
             checkPing("search");
             solr.setBaseURL(corepoSolrUrl+"/solr/cisterne-laesekompas-suggester-lookup");
             checkPing("corepo-solr");
-            URI uri = uriInfo.getBaseUriBuilder()
-                    .path("search")
-                    .queryParam("query","eventyr")
-                    .build();
-            this.target = client.target(uri);
-            Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
-            if (response.getStatus() != HttpStatus.SC_OK) {
-                log.error("Læsekompas calling itself went bad!");
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity(new Resp("Laesekompas self call went bad")).build();
-            }
-            List<Object> entityList = response.readEntity(new GenericType<List<Object>>() {});
-            if (entityList == null || entityList.size() == 0) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity(new Resp("Laesekompas self call did not return data")).build();
-            }
-            return Response.ok().entity(new Resp()).build();
         } catch (SolrServerException|IOException ex) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new Resp(ex.getMessage())).build();
         }
+        final List<List<String>> endpoints =
+                Arrays.asList(
+                        Arrays.asList("search"),
+                        Arrays.asList("suggest"),
+                        Arrays.asList("suggest", "audio_book"),
+                        Arrays.asList("suggest", "e_book"));
+        for (List<String> endpointPath : endpoints) {
+            String s = checkEndpoint(uriInfo, endpointPath, "eventyr");
+            if (s != null) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                   .entity(new Resp(s)).build();
+            }
+        }
+        return Response.ok().entity(new Resp()).build();
     }
 
+    /**
+     * Check one of the endpoints search, suggest, suggest/e_book, suggest/audio_book.
+     * Path is represented by a list, which is the "/"-split of it.
+     * Return null if everything is fine, otherwise return an error that we can return as response.
+     * @param uriInfo context object giving "current url"
+     * @param endpointPath path represented by a list, split by slash
+     * @param query some query we expect will return data on all the endpoints.
+     * @return null if all is good, an error message otherwise.
+     */
+    private String checkEndpoint(UriInfo uriInfo, List<String> endpointPath, String query) {
+        UriBuilder uBuilder = uriInfo.getBaseUriBuilder();
+        for (String pathPart : endpointPath) {
+            uBuilder.path(pathPart);
+        }
+        URI uri = uBuilder.queryParam("query", query).build();
+        log.info("STATUS CALLING ENDPOINT: {}", String.join(", ", endpointPath));
+        this.target = client.target(uri);
+        Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
+        if (response.getStatus() != HttpStatus.SC_OK) {
+            String res = String.format("Laesekompas self call went bad with endpoint %s and query %s",
+                    String.join("/", endpointPath), query);
+            log.error(res);
+            return res;
+        }
+        List<Object> entityList = response.readEntity(new GenericType<List<Object>>() {});
+        if (entityList == null || entityList.size() == 0) {
+            String res = String.format("Laesekompas self call with endpoint %s and query %s did not return data",
+                    String.join("/", endpointPath), query);
+            return res;
+        }
+        return null;
+    }
+
+    /**
+     * Send a ping to the given solr.
+     * @param solrName name of the solr
+     * @throws IOException
+     * @throws SolrServerException
+     */
     private void checkPing(String solrName) throws IOException, SolrServerException {
         SolrPingResponse ping = solr.ping();
         if (ping.getStatus() != 0) {
