@@ -149,7 +149,6 @@ public class StatusBean {
             uBuilder.path(pathPart);
         }
         URI uri = uBuilder.queryParam("query", query).build();
-        log.info("STATUS CALLING ENDPOINT: {}", String.join(", ", endpointPath));
         this.target = client.target(uri);
         Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
         if (response.getStatus() != HttpStatus.SC_OK) {
