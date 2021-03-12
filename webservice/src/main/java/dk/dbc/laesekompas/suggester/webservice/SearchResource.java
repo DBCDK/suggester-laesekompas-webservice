@@ -115,6 +115,9 @@ public class SearchResource {
                 put("fq", "branch_id:\""+params.branchId+"\"");
             }
             put(CommonParams.ROWS, Integer.toString(params.rows));
+            if (params.start != 0) {
+                put(CommonParams.START, Integer.toString(params.start));
+            }
         }};
         return new MapSolrParams(hm);
     }

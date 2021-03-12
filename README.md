@@ -26,7 +26,7 @@ Most of the environment variables here are documented in ```Dockerfile```, the r
 written to the console, and how it is formatted.
 
 ```bash
-docker run -it -e JAVA_MAX_HEAP_SIZE=1G -e LOG_FORMAT=text -e COREPO_SOLR_URL=http://cisterne.solr.dbc.dk:8983/ -e LAESEKOMPAS_SOLR_URL=http://laesekompas-suggester-laesekompas-solr-3-service.os-externals-staging.svc.cloud.dbc.dk:8983 -e SOLR_APPID=laesekompas-solr-appId  -e LOG_LEVEL=debug -p 8080:8080 laesekompas-webservice
+docker run -it -e JAVA_MAX_HEAP_SIZE=1G -e LOG_FORMAT=text -e COREPO_SOLR_URL=http://cisterne.solr.dbc.dk:8983/ -e LAESEKOMPAS_SOLR_URL=http://laesekompas-solr-service.os-externals-staging.svc.cloud.dbc.dk:8983 -e SOLR_APPID=laesekompas-solr-appId  -e LOG_LEVEL=debug -p 8080:8080 laesekompas-webservice
 ```
 
 ### Calling the web service
