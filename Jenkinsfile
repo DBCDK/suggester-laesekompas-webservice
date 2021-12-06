@@ -31,13 +31,13 @@ pipeline {
         timestamps()
     }
     stages {
-        stage("build") {
+        stage("Build") {
             steps {
                 // Fail Early..
                 script {
                     if (! env.BRANCH_NAME) {
                         currentBuild.rawBuild.result = Result.ABORTED
-                        throw new hudson.AbortException('Job Started from non MultiBranch Build')
+                        throw new hudson.AbortException('Job Started from non-MultiBranch Build')
                     } else {
                         println(" Building BRANCH_NAME == ${BRANCH_NAME}")
                     }
@@ -151,7 +151,7 @@ pipeline {
                             body: "<p>The master build failed. Log attached. </p><p><a href=\"${env.BUILD_URL}\">Build information</a>.</p>",
                             attachLog: true,
                     )
-                    slackSend(channel: 'de-team',
+                    slackSend(channel: 'de-notifications',
                             color: 'warning',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} failed and needs attention: ${env.BUILD_URL}",
                             tokenCredentialId: 'slack-global-integration-token')
