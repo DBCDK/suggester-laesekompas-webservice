@@ -1,6 +1,6 @@
 # Læsekompas Suggester and Search Webservice
 
-Suggester and Search webservice for læsekompas/MinNæsteBog, talks to the SolR and do a little bit of formatting of the SolR response.
+Suggester and Search webservice for Læsekompas/Min Næste Bog. Ttalks to the SolR and does a little bit of formatting of the SolR response.
 
 ## Building
 
