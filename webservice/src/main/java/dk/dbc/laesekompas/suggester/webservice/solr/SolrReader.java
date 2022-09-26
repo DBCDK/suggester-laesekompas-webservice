@@ -39,7 +39,7 @@ public interface SolrReader<T> {
         return new O<>(r);
     }
 
-    static class O<T> implements ObjectReader<T> {
+    class O<T> implements ObjectReader<T> {
 
         private final T t;
 
@@ -80,7 +80,7 @@ public interface SolrReader<T> {
                 throw new IllegalStateException("Cannot convert null to map");
             }
             if (t instanceof NamedList) {
-                return new M(((NamedList<Object>) t).asMap());
+                return new M(( (NamedList<Object>) t ).asMap());
             }
             if (t instanceof Map) {
                 return new M((Map<String, Object>) t);
@@ -101,7 +101,7 @@ public interface SolrReader<T> {
 
     }
 
-    static class L implements ListReader {
+    class L implements ListReader {
 
         private final List<Object> l;
 
@@ -121,7 +121,7 @@ public interface SolrReader<T> {
         }
     }
 
-    static class M implements MapReader {
+    class M implements MapReader {
 
         private final Map<String, Object> m;
 
