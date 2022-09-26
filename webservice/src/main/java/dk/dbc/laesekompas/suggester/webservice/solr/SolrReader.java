@@ -80,7 +80,7 @@ public interface SolrReader<T> {
                 throw new IllegalStateException("Cannot convert null to map");
             }
             if (t instanceof NamedList) {
-                return new NL((NamedList<Object>) t);
+                return new M(((NamedList<Object>) t).asMap());
             }
             if (t instanceof Map) {
                 return new M((Map<String, Object>) t);
@@ -126,40 +126,6 @@ public interface SolrReader<T> {
         private final Map<String, Object> m;
 
         private M(Map<String, Object> m) {
-            this.m = m;
-        }
-
-        @Override
-        public ObjectReader<Object> get(String name) {
-            return new O<>(m.get(name));
-        }
-
-        @Override
-        public Object get() {
-            return m;
-        }
-
-        @Override
-        public MapReader take(String name, Consumer<ObjectReader<Object>> consumer) {
-            Object val = m.get(name);
-            if (val != null) {
-                consumer.accept(new O<>(val));
-            }
-            return this;
-        }
-
-        @Override
-        public MapReader forEach(BiConsumer<String, ObjectReader<Object>> consumer) {
-            m.forEach((k, v) -> consumer.accept(k, new O(v)));
-            return this;
-        }
-    }
-
-    static class NL implements MapReader {
-
-        private final NamedList<Object> m;
-
-        NL(NamedList<Object> m) {
             this.m = m;
         }
 
