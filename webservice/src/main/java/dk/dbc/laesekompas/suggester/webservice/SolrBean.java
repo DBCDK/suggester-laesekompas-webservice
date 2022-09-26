@@ -20,7 +20,7 @@ package dk.dbc.laesekompas.suggester.webservice;
  * File created: 25/01/2021
  */
 
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +52,8 @@ public class SolrBean {
     @ConfigProperty(name = "COREPO_SOLR_URL")
     String corepoSolrUrl;
 
-    HttpSolrClient laesekompasSolr;
-    HttpSolrClient corepoSolr;
+    Http2SolrClient laesekompasSolr;
+    Http2SolrClient corepoSolr;
 
     @PostConstruct
     public void initialize() {
@@ -61,7 +61,7 @@ public class SolrBean {
             this.laesekompasSolrUrl = this.laesekompasSolrUrl +"/solr";
         }
         log.info("config/laesekompas SolR URL: {}", laesekompasSolrUrl);
-        this.laesekompasSolr = new HttpSolrClient.Builder(laesekompasSolrUrl).build();
+        this.laesekompasSolr = new Http2SolrClient.Builder(laesekompasSolrUrl).build();
         if (this.corepoSolrUrl == null) {
             this.corepoSolrUrl = "";
         }
@@ -71,14 +71,14 @@ public class SolrBean {
         // Appending alias for our specific application
         this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
         log.info("config/corepo SolR URL: {}", corepoSolrUrl);
-        this.corepoSolr = new HttpSolrClient.Builder(corepoSolrUrl).build();
+        this.corepoSolr = new Http2SolrClient.Builder(corepoSolrUrl).build();
     }
 
-    public HttpSolrClient getLaesekompasSolr() {
+    public Http2SolrClient getLaesekompasSolr() {
         return laesekompasSolr;
     }
 
-    public HttpSolrClient getCorepoSolr() {
+    public Http2SolrClient getCorepoSolr() {
         return corepoSolr;
     }
 

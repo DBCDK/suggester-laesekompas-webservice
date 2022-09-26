@@ -32,9 +32,8 @@
       <artifactId>javaee-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>annotations</artifactId>
-      <version>3.0.1</version>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -65,8 +64,7 @@
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
-      <version>8.8.1</version>
-      <type>jar</type>
+      <version>9.0.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -76,25 +74,27 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-all</artifactId>
-      <version>1.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-common</artifactId>
-      <version>2.30.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-client</artifactId>
-      <version>2.30.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
       <artifactId>jersey-hk2</artifactId>
-      <version>2.30.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>1.17.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -139,49 +139,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <version>0.20.1</version>
-        <extensions>true</extensions>
-        <configuration>
-          <images>
-            <image>
-              <alias>solr</alias>
-              <name>docker-os.dbc.dk/suggester-laesekompas-solr:latest</name>
-              <run>
-                <wait>
-                  <http>
-                    <url>http://${docker.host.address}:${suggest.solr.host.port}/solr/suggest-all/admin/ping</url>
-                    <method>GET</method>
-                    <status>200</status>
-                  </http>
-                  <time>30000</time>
-                </wait>
-                <ports>
-                  <port>suggest.solr.host.port:8983</port>
-                </ports>
-              </run>
-            </image>
-          </images>
-        </configuration>
-        <executions>
-          <execution>
-            <id>docker:start</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>start</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>docker:stop</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.17</version>
         <executions>
@@ -198,12 +155,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <systemPropertyVariables>
-            <laesekompas.solr.url>http://${docker.host.address}:${suggest.solr.host.port}/solr</laesekompas.solr.url>
-            <corepo.solr.url>http://cisterne-solr.dbc.dk:8986/solr</corepo.solr.url>
-          </systemPropertyVariables>
-        </configuration>
       </plugin>
     </plugins>
   </build>

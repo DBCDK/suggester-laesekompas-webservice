@@ -19,6 +19,7 @@ pipeline {
     agent { label "devel10" }
     tools {
         maven "Maven 3"
+        jdk "jdk11"
     }
     environment {
         MAVEN_OPTS = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
@@ -50,7 +51,7 @@ pipeline {
 
                     // We want code-coverage and pmd/findbugs even if unittests fails
                     status += sh returnStatus: true, script:  """
-                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo pmd:pmd pmd:cpd findbugs:findbugs javadoc:aggregate
+                        mvn -B -Dmaven.repo.local=\$WORKSPACE/.repo pmd:pmd pmd:cpd spotbugs:spotbugs javadoc:aggregate -Dspotbugs.excludeFilterFile=src/test/spotbugs/spotbugs-exclude.xml
                     """
 
                     junit testResults: '**/target/*-reports/TEST-*.xml'
@@ -65,8 +66,8 @@ pipeline {
                     def cpd = scanForIssues tool: [$class: 'Cpd'], pattern: '**/target/cpd.xml'
                     publishIssues issues:[cpd]
 
-                    def findbugs = scanForIssues tool: [$class: 'FindBugs'], pattern: '**/target/findbugsXml.xml'
-                    publishIssues issues:[findbugs], unstableTotalAll:1
+                    def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
+                    publishIssues issues:[spotbugs], unstableTotalAll:1
 
                     step([$class: 'JacocoPublisher',
                           execPattern: 'target/*.exec,**/target/*.exec',
