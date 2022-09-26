@@ -66,7 +66,7 @@ pipeline {
                     def cpd = scanForIssues tool: [$class: 'Cpd'], pattern: '**/target/cpd.xml'
                     publishIssues issues:[cpd]
 
-                    def findbugs = scanForIssues tool: [$class: 'FindBugs'], pattern: '**/target/findbugsXml.xml'
+                    def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
                     publishIssues issues:[spotbugs], unstableTotalAll:1
 
                     step([$class: 'JacocoPublisher',
