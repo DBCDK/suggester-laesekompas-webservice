@@ -24,7 +24,7 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
@@ -243,7 +243,7 @@ public class SearchResource {
         }
     }
 
-    private static boolean hasItemOnShelf(SearchEntity searchEntity, HttpSolrClient corepoSolr, String agencyId, String solrAppId) {
+    private static boolean hasItemOnShelf(SearchEntity searchEntity, Http2SolrClient corepoSolr, String agencyId, String solrAppId) {
         // Checks if any of the items in the work have an OnShelf status
         List<String> bibIdsInWork = searchEntity.getBibIdsInWork();
         List<List<String>> bibIdPartitions = new ArrayList<>();

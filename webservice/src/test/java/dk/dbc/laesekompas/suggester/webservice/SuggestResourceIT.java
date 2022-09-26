@@ -40,8 +40,9 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 
 
-public class SuggestResourceIT {
+public class SuggestResourceIT extends IntegrationTestBase {
     private static final Logger log = LoggerFactory.getLogger(SuggestResourceIT.class);
+
     SuggestResource suggestResource;
     SolrBean solrBean;
     SolrClient solrClient;
@@ -51,15 +52,14 @@ public class SuggestResourceIT {
         suggestResource = new SuggestResource();
         solrBean = new SolrBean();
         suggestResource.solrBean = solrBean;
-        String solrUrl = System.getProperty("laesekompas.solr.url");
 
-        solrBean.laesekompasSolrUrl = solrUrl;
+        solrBean.laesekompasSolrUrl = SOLR_URL;
         solrBean.initialize();
         log.info("We have the SolR suggester URL: {}", solrBean.laesekompasSolrUrl);
         suggestResource.maxNumberSuggestions = 10;
         suggestResource.initialize();
 
-        solrClient = solrBean.getLaesekompasSolr();
+        solrClient = makeSolrClient();
         solrClient.deleteByQuery("suggest-all", "*:*");
         solrClient.commit("suggest-all");
         solrClient.deleteByQuery("suggest-audio_book", "*:*");

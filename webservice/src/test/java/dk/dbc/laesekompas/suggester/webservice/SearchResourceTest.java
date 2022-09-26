@@ -23,7 +23,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SearchEntityType;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -321,8 +321,8 @@ public class SearchResourceTest {
         assert result.isEmpty();
     }
 
-    private static final HttpSolrClient laesekompasSolr = Mockito.mock(HttpSolrClient.class);
-    private static final HttpSolrClient corepoSolr = Mockito.mock(HttpSolrClient.class);
+    private static final Http2SolrClient laesekompasSolr = Mockito.mock(Http2SolrClient.class);
+    private static final Http2SolrClient corepoSolr = Mockito.mock(Http2SolrClient.class);
     private static final QueryResponse testLaesekompasSolrResponse = Mockito.mock(QueryResponse.class);
     private static final QueryResponse testCorepoSolrResponse = Mockito.mock(QueryResponse.class);
     private static final SolrDocument testDoc1 = new SolrDocument() {{

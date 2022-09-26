@@ -35,7 +35,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class SearchResourceIT {
+public class SearchResourceIT  extends IntegrationTestBase {
     private static final Logger log = LoggerFactory.getLogger(SearchResourceIT.class);
     SearchResource searchResource;
     SolrClient solrClient;
@@ -45,11 +45,11 @@ public class SearchResourceIT {
     public void setupBean() throws IOException, SolrServerException {
         searchResource = new SearchResource();
         solrBean = new SolrBean();
-        solrBean.laesekompasSolrUrl = System.getProperty("laesekompas.solr.url");
+        solrBean.laesekompasSolrUrl = SOLR_URL;
         solrBean.initialize();
         searchResource.solrBean = solrBean;
 
-        solrClient = solrBean.getLaesekompasSolr();
+        solrClient =  makeSolrClient();
         solrClient.deleteByQuery("search", "*:*");
         solrClient.commit("search");
     }

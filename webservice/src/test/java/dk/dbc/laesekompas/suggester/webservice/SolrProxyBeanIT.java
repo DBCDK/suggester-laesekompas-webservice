@@ -25,9 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
-import org.glassfish.jersey.internal.guava.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -39,11 +37,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class SolrProxyBeanIT {
+public class SolrProxyBeanIT extends IntegrationTestBase {
     private static final ObjectMapper O = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(SolrProxyBean.class);
     SolrProxyBean solrProxyBean;
@@ -52,13 +51,13 @@ public class SolrProxyBeanIT {
     @Before
     public void setupBean() throws IOException, SolrServerException {
         solrProxyBean = new SolrProxyBean();
-        String solrUrl = System.getProperty("laesekompas.solr.url");
+        String solrUrl = SOLR_URL;
 
         solrProxyBean.solrUrl = solrUrl;
         log.info("We have the SolR suggester URL: {}", solrProxyBean.solrUrl);
         solrProxyBean.initialize();
 
-        solrClient = new HttpSolrClient.Builder(solrUrl).build();
+        solrClient = makeSolrClient();
         solrClient.deleteByQuery("search", "*:*");
         solrClient.commit("search");
     }
@@ -107,7 +106,8 @@ public class SolrProxyBeanIT {
         Response response = solrProxyBean.solrProxy(uriInfo);
         String result = (String) response.getEntity();
         JsonNode j1 = O.readTree(result);
-        List<JsonNode> l = Lists.newArrayList(j1.get("response").withArray("docs").elements());
+        List<JsonNode> l = new ArrayList<>();
+        j1.get("response").withArray("docs").elements().forEachRemaining(l::add);
         assertEquals(2, l.size());
     }
 

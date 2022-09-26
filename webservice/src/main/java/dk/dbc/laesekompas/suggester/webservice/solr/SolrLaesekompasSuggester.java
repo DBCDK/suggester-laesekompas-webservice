@@ -1,4 +1,5 @@
 package dk.dbc.laesekompas.suggester.webservice.solr;
+
 /*
  * Copyright (C) 2019 DBC A/S (http://dbc.dk/)
  *
@@ -19,7 +20,6 @@ package dk.dbc.laesekompas.suggester.webservice.solr;
  *
  * File created: 20/02/2019
  */
-
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.AuthorSuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.SuggestionEntity;
 import dk.dbc.laesekompas.suggester.webservice.solr_entity.TagSuggestionEntity;
@@ -27,21 +27,22 @@ import dk.dbc.laesekompas.suggester.webservice.solr_entity.TitleSuggestionEntity
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.response.SuggesterResponse;
-import org.apache.solr.client.solrj.response.Suggestion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.function.Consumer;
+import org.apache.solr.client.solrj.SolrRequest;
+import org.apache.solr.client.solrj.request.GenericSolrRequest;
+import org.apache.solr.client.solrj.response.SimpleSolrResponse;
+import org.apache.solr.common.util.NamedList;
 
 public class SolrLaesekompasSuggester {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SolrLaesekompasSuggester.class);
-    private SolrClient solrClient;
+    private final SolrClient solrClient;
 
     public SolrLaesekompasSuggester(SolrClient solrClient) {
         this.solrClient = solrClient;
@@ -49,75 +50,109 @@ public class SolrLaesekompasSuggester {
 
     public SuggestQueryResponse suggestQuery(String query, SuggestType suggestType) throws IOException, SolrServerException {
         SolrQuery solrQuery = new SolrQuery();
-        solrQuery.setRequestHandler("/"+suggestType.getCollection()+"/suggest");
+        solrQuery.setRequestHandler("/suggest");
         solrQuery.setParam("suggest.q", query);
-        QueryResponse resp = solrClient.query(solrQuery);
-        SuggesterResponse suggesterResponse = resp.getSuggesterResponse();
-
-
-        SuggestQueryResponse res = new SuggestQueryResponse();
-        Map<String, List<Suggestion>> suggestionHandles = suggesterResponse.getSuggestions();
-        try {
-            List<SuggestionEntity> analyzerSuggestions = suggestionHandles.get("analyzer").stream().map(mapToSuggestionEntity)
-                    .collect(Collectors.toList());
-            List<SuggestionEntity> infixSuggestions = suggestionHandles.get("infix").stream().map(mapToSuggestionEntity)
-                    .collect(Collectors.toList());
-            List<SuggestionEntity> infixBlendedSuggestions = suggestionHandles.get("blended_infix").stream().map(mapToSuggestionEntity)
-                    .collect(Collectors.toList());
-            List<SuggestionEntity> fuzzySuggestions = suggestionHandles.get("fuzzy").stream().map(mapToSuggestionEntity)
-                    .collect(Collectors.toList());
-            infixBlendedSuggestions.sort((se1,se2) -> {
-                if (se1.getWeight() < se2.getWeight()) {
-                    return 1;
-                } else if (se1.getWeight() > se2.getWeight()) {
-                    return -1;
-                } else {
-                    return se1.getMatchedTerm().compareTo(se2.getMatchedTerm());
-                }
-            });
-            res.setAnalyzer(analyzerSuggestions);
-            res.setInfix(infixSuggestions);
-            res.setInfixBlended(infixBlendedSuggestions);
-            res.setFuzzy(fuzzySuggestions);
-        } catch(RuntimeException e) {
-            LOGGER.error("Error parsing SolR suggest response: {}", e);
-            throw new SolrServerException("Problem parsing SolR suggest response");
+        SolrRequest<SimpleSolrResponse> solrRequest = new GenericSolrRequest(SolrRequest.METHOD.POST, "/suggest", solrQuery);
+        NamedList<Object> solrResponse = solrClient.request(solrRequest, suggestType.getCollection());
+        if (solrResponse != null) {
+            try {
+                SuggestQueryResponse res = new SuggestQueryResponse();
+                SolrReader.of(solrResponse)
+                        .asMap()
+                        .get("suggest")
+                        .asMap()
+                        .take("analyzer", analyzer -> {
+                          ArrayList<SuggestionEntity> entites = solrSuggetionsToList(analyzer);
+                          res.setAnalyzer(entites);
+                      })
+                        .take("infix", infix -> {
+                          ArrayList<SuggestionEntity> entites = solrSuggetionsToList(infix);
+                          res.setInfix(entites);
+                      })
+                        .take("blended_infix", blendedInfix -> {
+                          ArrayList<SuggestionEntity> entites = solrSuggetionsToList(blendedInfix);
+                          entites.sort(BLENDED_INFIX_SORT);
+                          res.setInfixBlended(entites);
+                      })
+                        .take("fuzzy", fuzzy -> {
+                          ArrayList<SuggestionEntity> entites = solrSuggetionsToList(fuzzy);
+                          res.setFuzzy(entites);
+                      });
+                return res;
+            } catch (RuntimeException e) {
+                LOGGER.error("Error parsing SolR suggest response: {}", e);
+                LOGGER.debug("Error parsing SolR suggest response: {}", solrResponse);
+                throw new SolrServerException("Problem parsing SolR suggest response");
+            }
         }
-        return res;
+        LOGGER.error("Error getting SolR suggest response for: {}", query);
+        throw new SolrServerException("Problem getting SolR suggest response");
     }
 
-    public static final Function<Suggestion, SuggestionEntity> mapToSuggestionEntity = suggestion -> {
-        String term = suggestion.getTerm();
-        long weight = suggestion.getWeight();
-        String[] suggestionPayload = suggestion.getPayload().split("\\|");
-        switch (suggestionPayload[0]) {
-            case "TAG":
-                return new TagSuggestionEntity(
-                        term,
-                        weight,
-                        suggestionPayload[1],
-                        Integer.parseInt(suggestionPayload[2]),
-                        suggestionPayload[3]
-                );
-            case "AUTHOR":
-                return new AuthorSuggestionEntity(
-                        term,
-                        weight,
-                        suggestionPayload[1]
-                );
-            case "TITLE":
-                return new TitleSuggestionEntity(
-                        term,
-                        weight,
-                        suggestionPayload[1],
-                        suggestionPayload[2],
-                        suggestionPayload[3],
-                        suggestionPayload[4]
-                );
-            default:
-                LOGGER.error("Received the following suggestion from SolR which did not follow scheme: {}",
-                        suggestion.toString());
-                throw new RuntimeException("Recieved suggestion which did not follow the scheme...");
+    private ArrayList<SuggestionEntity> solrSuggetionsToList(SolrReader.ObjectReader<Object> analyzer) {
+        ArrayList<SuggestionEntity> entites = new ArrayList<>();
+        analyzer.asMap()
+                .forEach((name, suggestion) -> {
+                    suggestion.asMap()
+                            .get("suggestions")
+                            .asList()
+                            .forEach(storeEntityAt(entites::add));
+                });
+        return entites;
+    }
+
+    private static Consumer<SolrReader.ObjectReader<Object>> storeEntityAt(Consumer<SuggestionEntity> target) {
+        return o -> {
+            SolrReader.MapReader m = o.asMap();
+            String term = m.get("term").as(String.class).get();
+            long weight = m.get("weight").asLong();
+            String[] suggestionPayload = m.get("payload").as(String.class).get().split("\\|");
+            SuggestionEntity suggestion;
+            switch (suggestionPayload[0]) {
+                case "TAG":
+                    suggestion = new TagSuggestionEntity(
+                            term,
+                            weight,
+                            suggestionPayload[1],
+                            Integer.parseInt(suggestionPayload[2]),
+                            suggestionPayload[3]
+                    );
+                    break;
+                case "AUTHOR":
+                    suggestion = new AuthorSuggestionEntity(
+                            term,
+                            weight,
+                            suggestionPayload[1]
+                    );
+                    break;
+                case "TITLE":
+                    suggestion = new TitleSuggestionEntity(
+                            term,
+                            weight,
+                            suggestionPayload[1],
+                            suggestionPayload[2],
+                            suggestionPayload[3],
+                            suggestionPayload[4]
+                    );
+                    break;
+                default:
+                    LOGGER.error("Received the following suggestion from SolR which did not follow scheme: {}",
+                                 m.toString());
+                    throw new RuntimeException("Recieved suggestion which did not follow the scheme...");
+            }
+            target.accept(suggestion);
+        };
+
+    }
+
+    private static final Comparator<SuggestionEntity> BLENDED_INFIX_SORT = (se1, se2) -> {
+        if (se1.getWeight() < se2.getWeight()) {
+            return 1;
+        } else if (se1.getWeight() > se2.getWeight()) {
+            return -1;
+        } else {
+            return se1.getMatchedTerm().compareTo(se2.getMatchedTerm());
         }
     };
+
 }

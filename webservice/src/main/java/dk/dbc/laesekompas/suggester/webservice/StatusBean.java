@@ -23,7 +23,7 @@ package dk.dbc.laesekompas.suggester.webservice;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.HttpStatus;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -61,7 +61,7 @@ import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.E_BOOK;
 @Stateless
 @Path("status")
 public class StatusBean {
-    HttpSolrClient solr;
+//    Http2SolrClient solr;
     Client client;
     WebTarget target;
     private static final Logger log = LoggerFactory.getLogger(StatusBean.class);
@@ -79,18 +79,18 @@ public class StatusBean {
         if(!this.laesekompasSolrUrl.endsWith("/solr")) {
             this.laesekompasSolrUrl = this.laesekompasSolrUrl +"/solr";
         }
-        this.solr = new HttpSolrClient.Builder(laesekompasSolrUrl).build();
+//        this.solr = new Http2SolrClient.Builder(laesekompasSolrUrl).build();
         this.client = ClientBuilder.newClient();
     }
 
     @PreDestroy
     void onDestroy(){
         log.info("SOLR client destroyed");
-        try {
-            solr.close();
-        } catch (IOException ex) {
-            log.warn("Unable to destroy SOLR client");
-        }
+//        try {
+//            solr.close();
+//        } catch (IOException ex) {
+//            log.warn("Unable to destroy SOLR client");
+//        }
     }
 
     /**
@@ -105,16 +105,11 @@ public class StatusBean {
     public Response getStatus(@Context UriInfo uriInfo) {
         log.debug("StatusBean called...");
         try {
-            solr.setBaseURL(laesekompasSolrUrl +"/"+ ALL.getCollection());
-            checkPing("all");
-            solr.setBaseURL(laesekompasSolrUrl +"/"+ AUDIO_BOOK.getCollection());
-            checkPing("audio_book");
-            solr.setBaseURL(laesekompasSolrUrl +"/"+ E_BOOK.getCollection());
-            checkPing("e_book");
-            solr.setBaseURL(laesekompasSolrUrl +"/search");
-            checkPing("search");
-            solr.setBaseURL(corepoSolrUrl+"/solr/cisterne-laesekompas-suggester-lookup");
-            checkPing("corepo-solr");
+            checkPing(laesekompasSolrUrl + "/" + ALL.getCollection(), "all");
+            checkPing(laesekompasSolrUrl + "/" + AUDIO_BOOK.getCollection(), "audio_book");
+            checkPing(laesekompasSolrUrl + "/" + E_BOOK.getCollection(), "e_book");
+            checkPing(laesekompasSolrUrl + "/search", "search");
+            checkPing(corepoSolrUrl + "/solr/cisterne-laesekompas-suggester-lookup", "corepo-solr");
         } catch (SolrServerException|IOException ex) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new Resp(ex.getMessage())).build();
         }
@@ -172,11 +167,13 @@ public class StatusBean {
      * @throws IOException
      * @throws SolrServerException
      */
-    private void checkPing(String solrName) throws IOException, SolrServerException {
-        SolrPingResponse ping = solr.ping();
-        if (ping.getStatus() != 0) {
-            log.error("Error encountered when pinging solr: " + solrName);
-            throw new SolrServerException(ping.getException().getMessage());
+    private void checkPing(String solrUrl, String solrName) throws IOException, SolrServerException {
+        try(Http2SolrClient solr = new Http2SolrClient.Builder(solrUrl).build()) {
+            SolrPingResponse ping = solr.ping();
+            if (ping.getStatus() != 0) {
+                log.error("Error encountered when pinging solr: " + solrName);
+                throw new SolrServerException(ping.getException().getMessage());
+            }
         }
     }
 
