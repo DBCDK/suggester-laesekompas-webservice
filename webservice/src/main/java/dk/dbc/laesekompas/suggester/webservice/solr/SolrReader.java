@@ -8,34 +8,34 @@ import org.apache.solr.common.util.NamedList;
 
 public interface SolrReader<T> {
 
-    public T get();
+    T get();
 
     interface ObjectReader<T> extends SolrReader<T> {
 
-        public <R> SolrReader<R> as(Class<R> clazz);
+        <R> SolrReader<R> as(Class<R> clazz);
 
         long asLong();
 
-        public MapReader asMap();
+        MapReader asMap();
 
-        public ListReader asList();
+        ListReader asList();
     }
 
     interface MapReader extends SolrReader<Object> {
 
-        public ObjectReader<Object> get(String name);
+        ObjectReader<Object> get(String name);
 
-        public MapReader take(String name, Consumer<ObjectReader<Object>> consumer);
+        MapReader take(String name, Consumer<ObjectReader<Object>> consumer);
 
-        public MapReader forEach(BiConsumer<String, ObjectReader<Object>> consumer);
+        MapReader forEach(BiConsumer<String, ObjectReader<Object>> consumer);
     }
 
     interface ListReader extends SolrReader<Object> {
 
-        public ListReader forEach(Consumer<ObjectReader<Object>> consumer);
+        ListReader forEach(Consumer<ObjectReader<Object>> consumer);
     }
 
-    public static <R> ObjectReader<R> of(R r) {
+    static <R> ObjectReader<R> of(R r) {
         return new O<>(r);
     }
 
@@ -119,11 +119,6 @@ public interface SolrReader<T> {
             l.forEach(val -> consumer.accept(new O<>(val)));
             return this;
         }
-
-        @Override
-        public String toString() {
-            return l.toString();
-        }
     }
 
     static class M implements MapReader {
@@ -158,18 +153,13 @@ public interface SolrReader<T> {
             m.forEach((k, v) -> consumer.accept(k, new O(v)));
             return this;
         }
-
-        @Override
-        public String toString() {
-            return m.toString();
-        }
     }
 
     static class NL implements MapReader {
 
         private final NamedList<Object> m;
 
-        public NL(NamedList<Object> m) {
+        NL(NamedList<Object> m) {
             this.m = m;
         }
 
@@ -196,11 +186,6 @@ public interface SolrReader<T> {
         public MapReader forEach(BiConsumer<String, ObjectReader<Object>> consumer) {
             m.forEach((k, v) -> consumer.accept(k, new O(v)));
             return this;
-        }
-
-        @Override
-        public String toString() {
-            return m.toString();
         }
     }
 }
