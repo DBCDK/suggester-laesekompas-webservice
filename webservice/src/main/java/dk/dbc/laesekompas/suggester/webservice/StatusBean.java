@@ -61,7 +61,6 @@ import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.E_BOOK;
 @Stateless
 @Path("status")
 public class StatusBean {
-//    Http2SolrClient solr;
     Client client;
     WebTarget target;
     private static final Logger log = LoggerFactory.getLogger(StatusBean.class);
@@ -79,18 +78,12 @@ public class StatusBean {
         if(!this.laesekompasSolrUrl.endsWith("/solr")) {
             this.laesekompasSolrUrl = this.laesekompasSolrUrl +"/solr";
         }
-//        this.solr = new Http2SolrClient.Builder(laesekompasSolrUrl).build();
         this.client = ClientBuilder.newClient();
     }
 
     @PreDestroy
     void onDestroy(){
         log.info("SOLR client destroyed");
-//        try {
-//            solr.close();
-//        } catch (IOException ex) {
-//            log.warn("Unable to destroy SOLR client");
-//        }
     }
 
     /**
