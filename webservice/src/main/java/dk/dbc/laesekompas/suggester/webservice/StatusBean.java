@@ -161,7 +161,7 @@ public class StatusBean {
      * @throws SolrServerException
      */
     private void checkPing(String solrUrl, String solrName) throws IOException, SolrServerException {
-        try(Http2SolrClient solr = new Http2SolrClient.Builder(solrUrl).build()) {
+        try(Http2SolrClient solr = new Http2SolrClient.Builder(solrUrl).useHttp1_1(true).build()) {
             SolrPingResponse ping = solr.ping();
             if (ping.getStatus() != 0) {
                 log.error("Error encountered when pinging solr: " + solrName);

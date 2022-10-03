@@ -61,7 +61,7 @@ public class SolrBean {
             this.laesekompasSolrUrl = this.laesekompasSolrUrl +"/solr";
         }
         log.info("config/laesekompas SolR URL: {}", laesekompasSolrUrl);
-        this.laesekompasSolr = new Http2SolrClient.Builder(laesekompasSolrUrl).build();
+        this.laesekompasSolr = new Http2SolrClient.Builder(laesekompasSolrUrl).useHttp1_1(true).build();
         if (this.corepoSolrUrl == null) {
             this.corepoSolrUrl = "";
         }
@@ -71,7 +71,7 @@ public class SolrBean {
         // Appending alias for our specific application
         this.corepoSolrUrl = this.corepoSolrUrl+"/cisterne-laesekompas-suggester-lookup";
         log.info("config/corepo SolR URL: {}", corepoSolrUrl);
-        this.corepoSolr = new Http2SolrClient.Builder(corepoSolrUrl).build();
+        this.corepoSolr = new Http2SolrClient.Builder(corepoSolrUrl).useHttp1_1(true).build();
     }
 
     public Http2SolrClient getLaesekompasSolr() {
