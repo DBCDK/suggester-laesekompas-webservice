@@ -81,6 +81,9 @@ public class StatusBean {
 
     @PreDestroy
     void onDestroy() {
+        for (PingCheck check : checks) {
+            check.close();
+        }
         log.info("SOLR client destroyed");
     }
 
@@ -133,6 +136,10 @@ public class StatusBean {
             } catch (SolrServerException | IOException ex) {
                 throw new InternalServerErrorException("Error pinging: " + solrName, ex);
             }
+        }
+
+        public void close() {
+            solr.close();
         }
     }
 }
