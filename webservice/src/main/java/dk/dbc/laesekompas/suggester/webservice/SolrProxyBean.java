@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PreDestroy;
 
 @Stateless
 @Path("solr-proxy")
@@ -62,6 +63,12 @@ public class SolrProxyBean {
         }
         client = ClientBuilder.newClient();
     }
+
+    @PreDestroy
+    public void destroy(){
+        client.close();
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response solrProxy(@Context UriInfo uriInfo) {
