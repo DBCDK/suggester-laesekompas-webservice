@@ -83,7 +83,7 @@ public class StatusBean {
     }
 
     @PreDestroy
-    void onDestroy() {
+    public void destroy() {
         for (PingCheck check : checks) {
             check.close();
         }
