@@ -83,7 +83,7 @@ public class SolrBean {
     }
 
     @PreDestroy
-    void onDestroy(){
+    public void onDestroy(){
         laesekompasSolr.close();
         corepoSolr.close();
         log.info("SolrBean destroyed");
