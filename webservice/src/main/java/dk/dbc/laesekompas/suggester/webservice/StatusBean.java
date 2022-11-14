@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.Stateless;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -50,7 +52,8 @@ import static dk.dbc.laesekompas.suggester.webservice.solr.SuggestType.E_BOOK;
 /**
  * Bean containing webservice status endpoint for monitoring purposes
  */
-@Stateless
+@Singleton
+@Lock(LockType.READ)
 @Path("status")
 public class StatusBean {
 
