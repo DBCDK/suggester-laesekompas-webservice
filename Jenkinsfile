@@ -1,4 +1,3 @@
-// TODO change repository URL to proper scrum team URL
 def dockerRepository = 'https://docker-de.artifacts.dbccloud.dk'
 
 if (env.BRANCH_NAME == 'master') {

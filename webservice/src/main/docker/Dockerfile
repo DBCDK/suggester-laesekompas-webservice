@@ -1,4 +1,4 @@
-FROM docker.dbc.dk/payara5-micro:latest
+FROM docker-de.artifacts.dbccloud.dkpayara5-micro:latest
 
 ENV MAX_POOL_SIZE=3
 
