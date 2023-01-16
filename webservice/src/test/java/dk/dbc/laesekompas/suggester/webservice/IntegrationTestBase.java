@@ -16,7 +16,7 @@ public class IntegrationTestBase {
     }
 
     private static GenericContainer makeSolr() {
-        String image = "docker-os.dbc.dk/suggester-laesekompas-solr:latest";
+        String image = "https://docker-de.artifacts.dbccloud.dk/suggester-laesekompas-solr:latest";
         GenericContainer solr = new GenericContainer(image)
                 .withImagePullPolicy(new ImagePullPolicy() {
                     @Override
