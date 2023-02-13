@@ -5,10 +5,17 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
 
+  <repositories>
+    <repository>
+      <id>mavenrepo.dbc.dk</id>
+      <url>https://mavenrepo.dbc.dk/content/groups/public/</url>
+    </repository>
+  </repositories>
+
   <parent>
     <groupId>dk.dbc</groupId>
     <artifactId>microservice-pom</artifactId>
-    <version>java11-SNAPSHOT</version>
+    <version>java11-old-payara5</version>
     <relativePath/>
   </parent>
 
