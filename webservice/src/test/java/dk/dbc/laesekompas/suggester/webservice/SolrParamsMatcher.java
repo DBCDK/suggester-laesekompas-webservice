@@ -25,7 +25,7 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
 public class SolrParamsMatcher extends BaseMatcher<MapSolrParams> {
-    private MapSolrParams toEqual;
+    private final MapSolrParams toEqual;
 
     public SolrParamsMatcher(MapSolrParams toEqual) {
         this.toEqual = toEqual;

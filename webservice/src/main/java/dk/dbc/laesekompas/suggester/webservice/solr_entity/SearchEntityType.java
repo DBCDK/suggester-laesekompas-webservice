@@ -30,7 +30,7 @@ public enum SearchEntityType implements Serializable {
     BOOK("Bog"),
     E_BOOK("Ebog"),
     AUDIO_BOOK("Lydbog (net)");
-    private String type;
+    private final String type;
 
     SearchEntityType(String type) {
         this.type = type;
