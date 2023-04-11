@@ -137,7 +137,7 @@ public class SolrLaesekompasSuggester {
                     break;
                 default:
                     LOGGER.error("Received the following suggestion from SolR which did not follow scheme: {}",
-                                 m.toString());
+                            m);
                     throw new RuntimeException("Recieved suggestion which did not follow the scheme...");
             }
             target.accept(suggestion);

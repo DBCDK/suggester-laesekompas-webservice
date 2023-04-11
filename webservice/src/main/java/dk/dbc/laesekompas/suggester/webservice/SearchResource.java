@@ -34,17 +34,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -165,10 +165,10 @@ public class SearchResource {
         MDC.put("requestType", "search");
         MDC.put("query", query);
         MDC.put("field", field);
-        MDC.put("exact", "" + exact);
-        MDC.put("merge_workid", "" + mergeWorkID);
-        MDC.put("rows", "" + rows);
-        MDC.put("filter_status", "" + filterStatusOnShelf);
+        MDC.put("exact", String.valueOf(exact));
+        MDC.put("merge_workid", String.valueOf(mergeWorkID));
+        MDC.put("rows", String.valueOf(rows));
+        MDC.put("filter_status", String.valueOf(filterStatusOnShelf));
         MDC.put("branch_id", branchId);
 
         LOGGER.info("/search performed with query: {}, field: {}, exact: {}, merge_workid: {}, rows: {}, branch_id: {}, filter_status: {}",

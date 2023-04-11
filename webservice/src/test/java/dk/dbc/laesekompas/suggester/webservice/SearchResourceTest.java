@@ -36,10 +36,11 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -230,7 +231,7 @@ public class SearchResourceTest {
         Response response = searchResource.search("john", "", false, false, 10, false, null);
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
-        List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
+        List<SearchEntity> expectedList = Collections.singletonList(testDocSearchEntity1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -308,7 +309,7 @@ public class SearchResourceTest {
         Response response = searchResource.search("filter on branch", "", false, false, 10, false, "870970/b1");
         List<SearchEntity> result = (List<SearchEntity>) response.getEntity();
 
-        List<SearchEntity> expectedList = Arrays.asList(testDocSearchEntity1);
+        List<SearchEntity> expectedList = Collections.singletonList(testDocSearchEntity1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 

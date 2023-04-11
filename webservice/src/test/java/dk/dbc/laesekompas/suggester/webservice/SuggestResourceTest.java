@@ -35,10 +35,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -153,7 +154,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAll("test_remove_duplicate_title");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTitle1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTitle1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -162,7 +163,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestEBooks("test_remove_duplicate_title");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTitle1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTitle1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -171,7 +172,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAudioBooks("test_remove_duplicate_title");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTitle1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTitle1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -180,7 +181,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAll("test_remove_duplicate_author");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateAuthor1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateAuthor1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -189,7 +190,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestEBooks("test_remove_duplicate_author");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateAuthor1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateAuthor1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -198,7 +199,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAudioBooks("test_remove_duplicate_author");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateAuthor1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateAuthor1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -207,7 +208,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAll("test_remove_duplicate_tag");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTag1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTag1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -216,7 +217,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestEBooks("test_remove_duplicate_tag");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTag1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTag1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
@@ -225,7 +226,7 @@ public class SuggestResourceTest {
         Response response = suggestResource.suggestAudioBooks("test_remove_duplicate_tag");
         List<SuggestionEntity> result = (List<SuggestionEntity>) response.getEntity();
         // Make sure other duplicate (same workid) is removed, only keeping the highest ranked
-        List<SuggestionEntity> expectedList = Arrays.asList(testRemoveDuplicateTag1);
+        List<SuggestionEntity> expectedList = Collections.singletonList(testRemoveDuplicateTag1);
         assertThat(result, IsIterableContainingInOrder.contains(expectedList.toArray()));
     }
 
