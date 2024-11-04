@@ -7,7 +7,7 @@ if (env.BRANCH_NAME == 'master') {
                     triggers: [
                             [
                                     $class          : 'jenkins.triggers.ReverseBuildTrigger',
-                                    upstreamProjects: "Docker-payara5-bump-trigger", threshold: hudson.model.Result.SUCCESS
+                                    upstreamProjects: "Docker-payara6-bump-trigger", threshold: hudson.model.Result.SUCCESS
                             ]
                     ]
             ]
